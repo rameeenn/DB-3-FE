@@ -362,13 +362,13 @@
 }
 
 .tableWrapper {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+  width: 100%;
   overflow-x: auto;
-  padding: 0;
-  border-radius: 16px;
-  /* background: #fff;   */
+  overflow-y: visible;
+  height: auto;
+  max-height: none;
+  flex: unset;
+  min-height: auto;
 }
 
 .table {
@@ -491,7 +491,7 @@
   align-items: center;
   gap: 4px;
   /* padding: 16px 24px; */
-  margin-top: 10px;
+  /* margin-top: 10px; */
   background: transparent;
 }
 
@@ -502,6 +502,7 @@
   gap: 4px;
   margin-top: 2px;
   flex-shrink: 0;
+  
 }
 
 .paginationButton {

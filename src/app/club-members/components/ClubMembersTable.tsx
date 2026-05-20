@@ -35,6 +35,7 @@ export interface ClubMember {
   validTo: string;
   cardStatus: number | null;
   isActive: string;
+  totalCount?: number;
 }
 
 /* ===================== MAPPING ===================== */
@@ -87,7 +88,8 @@ export default function ClubMembersTable() {
   const [selectedClub, setSelectedClub] = useState('');
 
   const { data, isLoading, isFetching, error } = useAllClubMembers();
-
+  const totalCount = data?.data?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const totalListPages = 1;
 
   /* reset page on filter change */
@@ -97,14 +99,14 @@ export default function ClubMembersTable() {
 
   /* ===================== FILTER + MAP ===================== */
 
-  const members = useMemo(() => {
+   const members = useMemo(() => {
     const items = data?.data?.items ?? [];
-
-    const filtered =
-      selectedClub === ''
-        ? items
-        : items.filter((x) => x.subCategory === selectedClub);
-
+    
+    // Only filter by club, don't paginate here since serverSidePagination is true
+    const filtered = selectedClub === ''
+      ? items
+      : items.filter((x) => x.subCategory === selectedClub);
+    
     return filtered.map(mapApiClubMemberToTableRow);
   }, [data, selectedClub]);
 
@@ -169,6 +171,7 @@ export default function ClubMembersTable() {
       <DataTable<ClubMember>
         columns={clubMembersColumns}
         data={members}
+        totalCount={totalCount}
         clubOptions={[
           'All Clubs', // UI label
           'Golf Club',

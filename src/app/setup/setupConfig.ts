@@ -1,6 +1,10 @@
 import { Tab } from '@/components/tables/DataTable';
+export type SetupTab = {
+  key: string;
+  label: string;
+};
 
-export const SETUP_TABS: Tab[] = [
+export const SETUP_TABS: SetupTab[] = [
   { key: 'cp-agent', label: 'CP/Agent' },
   { key: 'bank-account', label: 'Bank Account' },
   { key: 'employee', label: 'Employee' },
@@ -9,12 +13,11 @@ export const SETUP_TABS: Tab[] = [
   { key: 'zone', label: 'Zone' },
   { key: 'fee-scale', label: 'Fee Scale' },
   { key: 'invoice', label: 'Invoice' },
-  { key: 'dha-x-halcon', label: 'DHA x Halcon' },
   { key: 'tag', label: 'Tag' },
   { key: 'tag-approval', label: 'Approve' },
   { key: 'tag-log', label: 'Approved tags' },
   { key: 'tag-type', label: 'Tag Type' },
-  { key: 'card-management', label: 'Card Management' }
+  { key: 'newcard', label: 'Card Management' }
 ];
 
 export const getAddButtonLabel = (tab: string): string => {
@@ -62,8 +65,8 @@ export const ROUTE_MAP: { [key: string]: string } = {
   'phase': '/setup/phase?modal=add',
   'fee-scale': '/setup/fee-scale?modal=add',
   'invoice': '/setup/invoice?modal=add',
-  'dha-x-halcon': '/setup/dha-x-halcon',
-  'card-management': '/setup/card-management',
+  //'dha-x-halcon': '/setup/dha-x-halcon',
+  'card-management': '/setup/newcard',
   'tag': '/setup/tag?modal=add',
   'tag-type': '/setup/tag-type?modal=add',
   'tag-approval': '/setup/tag-approval?modal=add',

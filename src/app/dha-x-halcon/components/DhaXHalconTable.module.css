@@ -1,0 +1,184 @@
+.headerArea {
+  margin: 4px 0 12px;
+}
+
+.summaryStrip {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: transparent;
+  padding: 0;
+}
+
+.leftGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.leftGroup .controlCard {
+  width: 160px;
+}
+
+.rightGroup {
+  display: flex;
+  gap: 8px;
+}
+
+
+
+.controlCard,
+.card {
+  position: relative;
+  border: 1px solid #e6eaef;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 140px !important;
+}
+
+.cardLabel {
+  /* margin: 0 0 4px; */
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cardValue {
+  margin: 4px 0 0;
+  color: #707782;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.headSelect {
+  appearance: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  color: #707782;
+  font-size: 10px;
+  font-weight: 500;
+  padding-right: 18px;
+  outline: none;
+  cursor: pointer;
+}
+
+.selectIcon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8b929b;
+  pointer-events: none;
+  background-color: rgb(255, 255, 255);
+  border-radius: 100%;
+  box-shadow: -13.8px -13.8px 27.6px 0px #e6e6e6, 4.14px 4.14px 27.6px 0px #5a5a5a80;
+}
+
+.calendarIcon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.datePickerButton {
+  appearance: none;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.datePickerIcon {
+  background: rgb(255, 255, 255);
+  width: 24px;
+  height: 24px;
+  border-radius: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+  top: 55%;
+  transform: translateY(-50%);
+  box-shadow: -13.8px -13.8px 27.6px 0px #FFFFFF, 4.14px 4.14px 27.6px 0px #AAAACC80;
+}
+
+.datePickerLabel {
+  color: #707782;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hiddenDateInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+
+.excelBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e6eaef;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: box-shadow 0.15s ease;
+}
+
+.excelBtn:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.excelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.midGroup {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.cardSub {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: #8b929b;
+  font-weight: 500;
+  position: absolute;
+  right:10%;
+  top: 30px; 
+}
+
+.controlCard .datePickerButton {
+  min-height: 18px;
+}

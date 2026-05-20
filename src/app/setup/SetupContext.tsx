@@ -37,7 +37,7 @@ export const SetupProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const value: SetupContextType = {
     activeTab,
-    tabs: SETUP_TABS,
+    tabs: [],
     addButtonLabel: getAddButtonLabel(activeTab),
     handleTabChange,
     handleAddNew,

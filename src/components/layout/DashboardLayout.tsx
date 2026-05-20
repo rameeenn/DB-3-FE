@@ -6,6 +6,9 @@ import { useRouter, usePathname } from "next/navigation";
 import styles from "./DashboardLayout.module.css";
 import { logout } from "../../lib/apiClient";
 import CircularButton from "../ui/CircularButton";
+import { Tab } from "../tables";
+import { SETUP_TABS, SetupTab } from "../../app/setup/setupConfig";
+
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,12 +17,15 @@ interface DashboardLayoutProps {
   userAvatarUrl?: string;
   headerAction?: React.ReactNode;
   showBackButton?: boolean;
+  tabs?: Tab[];
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 // Icon mapping for menu items
 const MENU_ICONS: Record<string, { active: string; inactive: string }> = {
   '/dashboard': { active: 'Dashboardgreen.svg', inactive: 'Dashboard.svg' },
-  '/setup': { active: 'Setupgreen.svg', inactive: 'Setup.png' },
+  '/setup': { active: 'setupactive.png', inactive: 'setupinactive.png' },
   '/user': { active: 'Residentialgreen.svg', inactive: 'Residential.png' },
   '/user-family': { active: 'Userfamilygreen.svg', inactive: 'Userfamily.svg' },
   '/vehicle': { active: 'Vehiclegreen.svg', inactive: 'Vehicle.png' },
@@ -27,6 +33,7 @@ const MENU_ICONS: Record<string, { active: string; inactive: string }> = {
   '/workers': { active: 'Workergreen.png', inactive: 'Worker.png' },
   '/luggage': { active: 'Luggagegreen.png', inactive: 'Luggage.png' },
   '/club-members': { active: 'Clubgreen.svg', inactive: 'Club.svg' },
+  '/dha-x-halcon': { active: 'active.png', inactive: 'inactive.png' },
 };
 
 // Helper function to get icon based on active state
@@ -35,11 +42,22 @@ const getMenuIcon = (path: string, isActive: boolean): string => {
   return icons ? `/icons/${icons[isActive ? 'active' : 'inactive']}` : '';
 };
 
-export default function DashboardLayout({ children, pageTitle = "Dashboard", userName = "Ahmed Faraz", userAvatarUrl, headerAction, showBackButton }: DashboardLayoutProps) {
+export default function DashboardLayout({
+  children,
+  pageTitle = "Dashboard",
+  userName = "Ahmed Faraz",
+  userAvatarUrl,
+  headerAction,
+  showBackButton,
+  tabs,
+  activeTab,
+  onTabChange
+}: DashboardLayoutProps){
   const [memberTypeOpen, setMemberTypeOpen] = useState(true);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [activeMenuItem, setActiveMenuItem] = useState('/dashboard');
+  const [accounteMenuOpen, setAccountMenuOpen] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return true;
 
@@ -49,6 +67,8 @@ export default function DashboardLayout({ children, pageTitle = "Dashboard", use
   const [displayName, setDisplayName] = useState(userName);
   const router = useRouter();
   const pathname = usePathname();
+  const isSetupPage = pathname?.startsWith('/setup');
+  
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -81,6 +101,8 @@ export default function DashboardLayout({ children, pageTitle = "Dashboard", use
         <div className={styles.sidebarHeader}>
           <div className={styles.logoSection}>
             <img src="/images/dha.png" alt="DHA" className={styles.logo} />
+            <h4 style={{ margin: 5}}>Smart DHA - Karachi</h4>
+            <p style={{ fontSize: "12px", color: "#6b7280" }}>Redefining Urban Living</p>
             <div className={styles.logoSeparator} />
           </div>
           {/* <button className={styles.closeSidebarBtn} onClick={() => setSidebarOpen(false)}>
@@ -104,6 +126,7 @@ export default function DashboardLayout({ children, pageTitle = "Dashboard", use
             <img src={getMenuIcon('/setup', activeMenuItem.includes('/setup'))} alt="" className={styles.menuIconImg} />
           </Link>
           {sidebarOpen && (
+            <div>
             <div 
               className={styles.menuSectionTitle} 
               onClick={() => setMemberTypeOpen(!memberTypeOpen)}
@@ -116,6 +139,7 @@ export default function DashboardLayout({ children, pageTitle = "Dashboard", use
                 className={`${styles.menuDropdownIconImg} ${memberTypeOpen ? styles.menuDropdownIconOpen : ''}`}
               />
             </div>
+              </div>
           )}
           {memberTypeOpen && (
             <>
@@ -170,6 +194,29 @@ export default function DashboardLayout({ children, pageTitle = "Dashboard", use
               </Link>
             </>
           )}
+          <div
+              className={styles.menuSectionTitle}
+              onClick={() => setAccountMenuOpen(!accounteMenuOpen)}
+              style={{ cursor: 'pointer' }}
+              >
+              <span>Account & Finance</span>
+              <img 
+                src="/icons/Arrow.png" 
+                alt="" 
+                className={`${styles.menuDropdownIconImg} ${accounteMenuOpen ? styles.menuDropdownIconOpen : ''}`}
+              />
+            </div>
+          {accounteMenuOpen && (
+            <>
+              <Link 
+                href="/dha-x-halcon"
+                className={`${(activeMenuItem === '/dha-x-halcon' || activeMenuItem.startsWith('/dha-x-halcon/')) ? styles.menuItemActive : ''} ${styles.menuItem}`}
+              >
+                <span className={styles.menuItemText}>DHA x Halcon</span>  
+                <img src={getMenuIcon('/dha-x-halcon', (activeMenuItem === '/dha-x-halcon' || activeMenuItem.startsWith('/dha-x-halcon/')))} alt="" className={styles.menuIconImg} />
+              </Link>
+              </>
+          )}
           {sidebarOpen && <div className={styles.menuSeparator} />}
         </nav>
       </aside>
@@ -198,6 +245,25 @@ export default function DashboardLayout({ children, pageTitle = "Dashboard", use
             />) : null}
             <div className={styles.headerTitle}>{pageTitle}</div>
           </div>
+           {isSetupPage && SETUP_TABS?.length > 0 && (
+  <div className={styles.tabsWrapper}>
+    <div className={styles.tabsScroll}>
+      {SETUP_TABS.map((tab: SetupTab) => {
+        const isActive = pathname.split('/').pop() === tab.key;
+
+        return (
+          <button
+  key={tab.key}
+  onClick={() => router.push(`/setup/${tab.key}`)}
+  className={`${styles.tabItem} ${isActive ? styles.tabActive : ''}`}
+>
+  {tab.label}
+</button>
+        );
+      })}
+    </div>
+  </div>
+)}
           <div className={styles.headerRight}>
             <div className={styles.userInfoWrapper}>
               <div 

@@ -20,6 +20,7 @@ const nonMemberRows: CardRow[] = memberRows.map((row, index) => ({
   rfidCardNo: `UID-92786453000011${92 + index}`,
 }));
 
+
 export default function ResidentCardTable({ tabs, activeTab, onTabChange, mainTabsHeader }: CardTypeTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeSubTab, setActiveSubTab] = useState<ResidentTableTab>('member-card');

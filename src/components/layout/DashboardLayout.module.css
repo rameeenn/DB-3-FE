@@ -352,16 +352,18 @@
     padding: 16px 12px;
   }
 
-  .header {
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
+ .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
 
   .headerRight {
-    width: 100%;
-    gap: 12px;
-  }
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
 
   .searchInput {
     width: 100%;
@@ -377,7 +379,7 @@
   }
 
   .contentSection {
-    padding: 6px;
+    padding: 3px;
   }
 }
 .header {
@@ -391,7 +393,10 @@
 .headerTitleWrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+
+  flex-shrink: 0;   /* 🔥 IMPORTANT */
+  width: auto;
 }
 
 .backArrowImg {
@@ -687,4 +692,74 @@
 .headerAction button:hover,
 .headerActionButton:hover {
   background: #28a035;
+}
+.tabsWrapper {
+  flex: 1;              /* takes remaining space */
+  display: flex;
+  justify-content: center;
+
+  min-width: 0;         /* 🔥 CRITICAL */
+  overflow: hidden;
+}
+
+.tabsScroll {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
+  /* padding: 4px 10px; */
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  max-width: 420px; /* controls "3 tabs visible" */
+  padding-bottom: 4px;
+  display: flex;
+  overflow-x: auto;
+  align-items: center;
+}
+
+.tabsScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.tabItem {
+  flex: 0 0 auto;
+  min-width: 130px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 500;
+
+  border-radius: 1px;
+  border: 1px solid transparent;
+
+  background: #eeeff4f2;
+  color: #333;
+
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+/* ACTIVE TAB */
+.tabActive {
+   background: #ffffff;
+  color: #27ae60;
+  font-weight: 600;
+
+  border: 1px solid #27ae60;
+  box-shadow: 0 2px 6px rgba(39, 174, 96, 0.15);
+
+  font-size: 16px;
+  padding: 10px 20px;
+}
+
+/* hover */
+.tabItem:hover {
+  background: #edeaea;
+}
+
+/* remove this if you want clean button look */
+.tabActive::after {
+  display: none;
 }

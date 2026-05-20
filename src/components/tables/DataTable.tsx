@@ -57,6 +57,18 @@ export interface DataTableProps<T> {
   clubOptions?: string[];
   selectedClub?: string;
   onClubChange?: (value: string) => void;
+  userTypeOptions?: string[];
+selectedUserType?: string;
+onUserTypeChange?: (value: string) => void;
+
+categoryOptions?: string[];
+selectedCategory?: string;
+onCategoryChange?: (value: string) => void;
+
+subCategoryOptions?: string[];
+selectedSubCategory?: string;
+onSubCategoryChange?: (value: string) => void;
+
 }
 
 // ================================ Long Fields ==============================
@@ -196,7 +208,20 @@ export default function DataTable<T extends Record<string, any>>({
    clubOptions,
   selectedClub,
   onClubChange,
-}: DataTableProps<T>) {
+  totalCount,
+  userTypeOptions,
+  selectedUserType,
+  onUserTypeChange,
+
+  categoryOptions,
+  selectedCategory,
+  onCategoryChange,
+
+  subCategoryOptions,
+  selectedSubCategory,
+  onSubCategoryChange,
+
+}: DataTableProps<T>  & { totalCount?: number }) {
   
   // ================================ STATE MANAGEMENT ================================
   
@@ -572,26 +597,65 @@ export default function DataTable<T extends Record<string, any>>({
 
       <div className={styles.rightControls}>
 
-        {/* ✅ CLUB DROPDOWN
-        {clubOptions && selectedClub !== undefined && (
-          <div className={styles.filterGroup}>
-            <label className={styles.controlLabel}>Club</label>
+        {/* USER TYPE */}
+{userTypeOptions && selectedUserType !== undefined && (
+  <div className={styles.filterGroup}>
+    <label className={styles.controlLabel}>User Type</label>
+    <div className={styles.selectShell}>
+      <select
+        className={styles.sortSelect}
+        value={selectedUserType}
+        onChange={(e) => onUserTypeChange?.(e.target.value)}
+      >
+        {userTypeOptions.map((u) => (
+          <option key={u} value={u}>
+            {u}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+)}
 
-            <div className={styles.selectShell}>
-              <select
-                className={styles.sortSelect}
-                value={selectedClub}
-                onChange={(e) => onClubChange?.(e.target.value)}
-              >
-                {clubOptions.map((club) => (
-                  <option key={club} value={club}>
-                    {club}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )} */}
+{/* CATEGORY */}
+{categoryOptions && selectedCategory !== undefined && (
+  <div className={styles.filterGroup}>
+    <label className={styles.controlLabel}>Category</label>
+    <div className={styles.selectShell}>
+      <select
+        className={styles.sortSelect}
+        value={selectedCategory}
+        onChange={(e) => onCategoryChange?.(e.target.value)}
+      >
+        {categoryOptions.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+)}
+
+{/* SUB CATEGORY */}
+{subCategoryOptions && selectedSubCategory !== undefined && (
+  <div className={styles.filterGroup}>
+    <label className={styles.controlLabel}>Sub Category</label>
+    <div className={styles.selectShell}>
+      <select
+        className={styles.sortSelect}
+        value={selectedSubCategory}
+        onChange={(e) => onSubCategoryChange?.(e.target.value)}
+      >
+        {subCategoryOptions.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+)}
 
         {/* Dynamic column filters */}
         {availableFilters.map((filter) => (
@@ -748,14 +812,39 @@ export default function DataTable<T extends Record<string, any>>({
 
   // ================================ FOOTER RENDERER ================================
   
-  const renderFooter = () => {
-    return (
-      <div className={styles.footerBar}>
-        {renderPagination()}
-        
+const renderFooter = () => {
+  const start = (safeCurrentPage - 1) * safeRowsPerPage + 1;
+  const end = Math.min(
+    safeCurrentPage * safeRowsPerPage,
+    filteredAndSortedData.length
+  );
+
+  return (
+    <div className={styles.footerBar}>
+      
+      {/* LEFT SIDE */}
+      <div className={styles.footerInfo} style={{marginTop: '15px'}}>
+        <p style={{ fontSize: '12px' }}>
+        <span style={{ color: 'green' }}>Rows displayed:</span>
+        <span style={{ color: 'black' }}>{' '} {start}-{end}</span>
+        </p>
+
+  <p style={{ fontSize: '12px' }}>
+    <span style={{ color: 'green' }}>Total count:</span>{' '}
+    <span style={{ color: 'black' }}>
+    {filteredAndSortedData.length}
+  </span>
+  </p>
       </div>
-    );
-  };
+
+      {/* RIGHT SIDE */}
+      <div className={styles.footerPagination}>
+        {renderPagination()}
+      </div>
+
+    </div>
+  );
+};
 
   // ================================ MAIN RENDER ================================
   
