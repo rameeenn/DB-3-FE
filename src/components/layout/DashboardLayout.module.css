@@ -724,13 +724,13 @@
 
 .tabItem {
   flex: 0 0 auto;
-  min-width: 130px;
-  padding: 10px 18px;
-  font-size: 15px;
+  min-width: 110px;   /* slightly smaller default */
+  padding: 8px 14px;  /* smaller default padding */
+  font-size: 14px;    /* smaller default font */
   font-weight: 500;
 
   border-radius: 1px;
-  border: 1px solid transparent;
+  border: 1px solid #dad9d9;
 
   background: #eeeff4f2;
   color: #333;
@@ -741,17 +741,21 @@
   text-align: center;
 }
 
-/* ACTIVE TAB */
+/* ACTIVE TAB - LARGER */
 .tabActive {
-   background: #ffffff;
+  background: #ffffff;
   color: #27ae60;
-  font-weight: 600;
+  font-weight: 700;
 
   border: 1px solid #27ae60;
-  box-shadow: 0 2px 6px rgba(39, 174, 96, 0.15);
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
 
-  font-size: 16px;
-  padding: 10px 20px;
+  /* 🔥 Bigger size */
+  min-width: 140px;     /* wider than default 110px */
+  padding: 12px 24px;   /* more padding = larger tab */
+  font-size: 18px;      /* bigger text */
+
+  transform: scale(1.02); /* optional slight scaling */
 }
 
 /* hover */

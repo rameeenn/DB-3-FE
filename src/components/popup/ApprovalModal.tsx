@@ -182,7 +182,7 @@ export default function ApprovalModal({
     const rawTo = toIsoDate(String(formData.validTo || data.validTo || ''));
     const { validFrom, validTo } = normalizeApprovalDateRange(rawFrom, rawTo);
 
-    const planNum = formData.planType !== undefined && formData.planType !== '' ? Number(formData.planType) : 0;
+    const planType = String(formData.planType || data.planType || 'unknown');
 
     const payload = {
       tagApprovalRequestId: String(formData.tagApprovalRequestId || data.id),
@@ -195,7 +195,14 @@ export default function ApprovalModal({
       status: toStatusValue(formData.status),
       feeScaleId: formData.feeScaleId !== undefined ? String(formData.feeScaleId) : String(data.feeScale || ''),
       trialPeriod: String(formData.trialPeriod || 'Unknown'),
-      planType: Number.isFinite(planNum) ? planNum : 0,
+      planType,
+zoneId: String(formData.zoneId || ''),
+deviceId: String(formData.deviceId || ''),
+zoneIds: formData.zoneIds
+  ? Array.isArray(formData.zoneIds)
+    ? formData.zoneIds
+    : [String(formData.zoneIds)]
+  : [],
     };
 
     console.log(

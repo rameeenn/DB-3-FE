@@ -5,15 +5,10 @@ import {
 	type InvoiceSummaryTotals,
 } from "../../services/invoice.service";
 
-export function useInvoiceSummary(params: GetInvoiceSummaryParams) {
-	return useQuery<InvoiceSummaryTotals>({
-		queryKey: [
-			"invoice-summary",
-			params.pageNumber ?? 1,
-			params.pageSize ?? 5,
-			params.fromDate ?? "",
-			params.toDate ?? "",
-		],
-		queryFn: () => getInvoiceSummary(params),
-	});
-}
+// In your useInvoiceSummary hook file
+export const useInvoiceSummary = (params: GetInvoiceSummaryParams) => {
+  return useQuery({
+    queryKey: ['invoiceSummary', params],
+    queryFn: () => getInvoiceSummary(params),
+  });
+};

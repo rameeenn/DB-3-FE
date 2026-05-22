@@ -301,7 +301,7 @@ export default function CommonEntityForm({
     }
 
     // eTagId (RFID) and tagNumber: format as 1234 5678 1234 5678, allow only 16 digits
-    if (name === 'eTagId' || name === 'tagNumber') {
+    if (name === 'eTagId') {
       let digits = value.replace(/\D/g, '');
       if (digits.length > 16) digits = digits.slice(0, 16);
       // Insert space every 4 digits
@@ -476,18 +476,18 @@ export default function CommonEntityForm({
 
 
     // eTagId (RFID) and tagNumber validation: must be exactly 16 digits, formatted as 1234 5678 1234 5678
-    for (const field of ['eTagId', 'tagNumber']) {
+    for (const field of ['eTagId']) {
       if (formData[field]) {
         const digits = formData[field].replace(/\D/g, '');
         if (digits.length !== 16) {
           setWarningTitle('Validation Error');
-          setWarningMessage(`${field === 'eTagId' ? 'Vehicle E-Tag ID (RFID)' : 'Tag Number'} must be exactly 16 digits.`);
+          setWarningMessage(`${field === 'eTagId' || 'Vehicle E-Tag ID (RFID)'} must be exactly 16 digits.`);
           setShowWarning(true);
           return;
         }
         if (!/^\d{4}( \d{4}){3}$/.test(formData[field])) {
           setWarningTitle('Validation Error');
-          setWarningMessage(`${field === 'eTagId' ? 'Vehicle E-Tag ID (RFID)' : 'Tag Number'} must be in the format 1234 5678 1234 5678.`);
+          setWarningMessage(`${field === 'eTagId' || 'Vehicle E-Tag ID (RFID)'} must be in the format 1234 5678 1234 5678.`);
           setShowWarning(true);
           return;
         }

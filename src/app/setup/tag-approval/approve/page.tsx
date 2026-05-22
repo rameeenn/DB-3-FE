@@ -32,7 +32,7 @@ export default function AddNewTag() {
   const [planType, setPlanType] = useState<string>('');
   const [calculatedDates, setCalculatedDates] = useState<{ validFrom: string; validTo: string }>({ validFrom: '', validTo: '' });
   const [isInitialized, setIsInitialized] = useState(false);
-
+  
   // Calculate dates based on plan type - returns an object with validFrom and validTo
   const calculateDatesByPlanType = (type: string | Number) => {
     if (!type) {
@@ -262,20 +262,30 @@ export default function AddNewTag() {
     const { validFrom, validTo } = normalizeApprovalDateRange(rawFrom, rawTo);
 
     const planNum = formData.planType !== undefined && formData.planType !== '' ? Number(formData.planType) : 0;
-
+    const isQr = tag.tagType?.toLowerCase().includes('qr');
     const payload = {
-      tagApprovalRequestId: String(formData.tagApprovalRequestId || tag.id),
-      entityName: String(formData.name || tag.subjectName || ''),
-      entityId: String(formData.entityId || tag.subjectId || ''),
-      tagNumber: normalizeTagNumberForApi(String(formData.tagNumber || tag.tagNumber || '')),
-      tagTypeId,
-      validFrom,
-      validTo,
-      status: toStatusValue(formData.status),
-      feeScaleId: formData.feeScaleId !== undefined ? String(formData.feeScaleId) : String(tag.feeScale || ''),
-      trialPeriod: String(formData.trialPeriod || 'Unknown'),
-      planType: Number.isFinite(planNum) ? planNum : 0,
-    };
+  tagApprovalRequestId: String(formData.tagApprovalRequestId || tag.id),
+  entityName: String(formData.name || tag.subjectName || ''),
+  entityId: String(formData.entityId || tag.subjectId || ''),
+  tagNumber: normalizeTagNumberForApi(String(formData.tagNumber || tag.tagNumber || '')),
+  tagTypeId,
+
+  validFrom,
+  validTo,
+
+  status: toStatusValue(formData.status),
+
+  feeScaleId: String(formData.feeScaleId || tag.feeScale || ''),
+
+  // 🔥 FIXED REQUIRED FIELDS (THIS IS YOUR 400 ROOT CAUSE)
+  zoneId: tag.zoneId || undefined,
+deviceId: tag.deviceId || undefined,
+zoneIds: tag.zoneIds?.length ? tag.zoneIds : undefined,
+
+  trialPeriod: String(formData.trialPeriod || 'Unknown'),
+
+  planType: formData.planType ? String(formData.planType) : '0',
+};
 
     console.log('approveTagApprovalRequest payload:', payload);
 
@@ -322,7 +332,7 @@ export default function AddNewTag() {
       validTo: validToValue,
       feeScaleId: tag.feeScale,
       status: toStatusFlag(tag.status),
-      planType: tag.planType || '',
+      planType: tag.planType ? String(tag.planType) : '',
       trialPeriod: tag.trialPeriod || 'Unknown',
       zone: '',
       notes: tag.notes,

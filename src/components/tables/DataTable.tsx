@@ -126,6 +126,7 @@ export function StatusBadge({
       const statusStr = (normalizedLabel || '').toLowerCase();
       switch (statusStr) {
         case 'approved':
+        case 'paid':
           return styles.statusApproved;
         case 'rejected':
           return styles.statusRejected;
@@ -825,16 +826,11 @@ const renderFooter = () => {
       {/* LEFT SIDE */}
       <div className={styles.footerInfo} style={{marginTop: '15px'}}>
         <p style={{ fontSize: '12px' }}>
-        <span style={{ color: 'green' }}>Rows displayed:</span>
-        <span style={{ color: 'black' }}>{' '} {start}-{end}</span>
+        <span style={{ color: 'black' }}>Rows </span>
+        <span style={{ color: 'green' }}>{' '} {start}-{end}</span>
+          <span style={{ color: 'black' }}> of </span>
+          <span style={{ color: 'green' }}>{' '} {filteredAndSortedData.length}</span>
         </p>
-
-  <p style={{ fontSize: '12px' }}>
-    <span style={{ color: 'green' }}>Total count:</span>{' '}
-    <span style={{ color: 'black' }}>
-    {filteredAndSortedData.length}
-  </span>
-  </p>
       </div>
 
       {/* RIGHT SIDE */}

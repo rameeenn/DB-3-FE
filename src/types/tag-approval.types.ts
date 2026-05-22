@@ -6,7 +6,7 @@ export interface TagApprovalRequest {
   tagType: string;
   tagNumber: string;
   feeScale: string;
-  planType: string;
+  planType: unknown;
   validFrom: string;
   validTo: string;
   notes: string;
@@ -17,4 +17,7 @@ export interface TagApprovalRequest {
   category?: string | null;
   subCategory?: string | null;
   cardStatus?: string | null;
+  zoneId?: string | null;
+  deviceId?: string | null;
+  zoneIds?: string[] | null;
 }

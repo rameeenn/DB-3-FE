@@ -83,12 +83,26 @@ export default function InvoiceTable(props: InvoiceTableProps) {
 
   const { data, isLoading } = useInvoices(invoiceQueryPayload);
 
-  const { data: summaryTotals } = useInvoiceSummary({
-    pageNumber: 1,
-    pageSize: 10,
-    fromDate: fromIso,
-    toDate: toIso,
-  });
+ // Replace the useInvoiceSummary with this:
+const { data: allInvoicesData, isLoading: isSummaryLoading } = useInvoices({
+  pageNumber: 1,
+  pageSize: 1000, // Get all records
+  ...(invoiceNumberFilter.trim() ? { invoiceNumber: invoiceNumberFilter.trim() } : {}),
+  ...(fromIso ? { fromDate: fromIso } : {}),
+  ...(toIso ? { toDate: toIso } : {}),
+});
+
+// Then calculate totals from allInvoicesData
+const summaryTotals = useMemo(() => {
+  const allInvoices = allInvoicesData?.data || [];
+  return {
+    totalAmount: allInvoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0),
+    totalTaxAmount: allInvoices.reduce((sum, inv) => sum + (Number(inv.taxAmount) || 0), 0),
+    totalBankCharges: allInvoices.reduce((sum, inv) => sum + (Number(inv.bankCharges) || 0), 0),
+    paidCount: allInvoices.filter(inv => inv.status?.toLowerCase() === 'paid').length,
+    unpaidCount: allInvoices.filter(inv => inv.status?.toLowerCase() !== 'paid').length,
+  };
+}, [allInvoicesData]);
   const [editInvoiceId, setEditInvoiceId] = useState<string | undefined>();
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [hasCheckedId, setHasCheckedId] = useState(false);
@@ -100,7 +114,7 @@ export default function InvoiceTable(props: InvoiceTableProps) {
 
   const modalMode = searchParams?.get('modal');
   const modalId = searchParams?.get('id');
-
+  
   useEffect(() => {
     if (modalMode === 'edit' || modalMode === 'view') {
       if (modalId) {
@@ -208,7 +222,26 @@ export default function InvoiceTable(props: InvoiceTableProps) {
     () => invoices.reduce((s, i) => s + (Number(i.bankCharges) || 0), 0),
     [invoices]
   );
+// Add these calculations after the invoices mapping (around line 200)
+const paidTotal = useMemo(
+  () => invoices.reduce((sum, inv) => {
+    if (inv.status?.toLowerCase() === 'paid') {
+      return sum + (Number(inv.totalAmount) || 0);
+    }
+    return sum;
+  }, 0),
+  [invoices]
+);
 
+const unpaidTotal = useMemo(
+  () => invoices.reduce((sum, inv) => {
+    if (inv.status?.toLowerCase() !== 'paid') {
+      return sum + (Number(inv.totalAmount) || 0);
+    }
+    return sum;
+  }, 0),
+  [invoices]
+);
   const excelDateRangeIso = () => {
     const toYmd = toDate.trim() || new Date().toISOString().slice(0, 10);
     const fromYmd = fromDate.trim() || toYmd;
@@ -291,23 +324,31 @@ export default function InvoiceTable(props: InvoiceTableProps) {
           </div>
         </div>
         <div className={toolbarStyles.metrics}>
-          <div className={toolbarStyles.metricCard}>
-            <p className={toolbarStyles.label}>Total Amount</p>
-            <p className={toolbarStyles.value}>{formatPkr(summaryTotals?.totalAmount)}</p>
-          </div>
-          <div className={toolbarStyles.metricCard}>
-            <p className={toolbarStyles.label}>Total Tax Amount</p>
-            <p className={toolbarStyles.value}>{formatPkr(pageTaxTotal)}</p>
-          </div>
-          <div className={toolbarStyles.metricCard}>
-            <p className={toolbarStyles.label}>Total Bank Charges</p>
-            <p className={toolbarStyles.value}>{formatPkr(pageBankTotal)}</p>
-          </div>
-          <div className={toolbarStyles.metricCard}>
-            <p className={toolbarStyles.label}>Total Receivables</p>
-            <p className={toolbarStyles.value}>{formatPkr(summaryTotals?.totalAmount)}</p>
-          </div>
-        </div>  
+  <div className={toolbarStyles.metricCard}>
+    <p className={toolbarStyles.label}>Total Amount</p>
+    <p className={toolbarStyles.value}>{formatPkr(summaryTotals.totalAmount)}</p>
+  </div>
+  <div className={toolbarStyles.metricCard}>
+    <p className={toolbarStyles.label}>Total Tax Amount</p>
+    <p className={toolbarStyles.value}>{formatPkr(summaryTotals.totalTaxAmount)}</p>
+  </div>
+  <div className={toolbarStyles.metricCard}>
+    <p className={toolbarStyles.label}>Total Bank Charges</p>
+    <p className={toolbarStyles.value}>{formatPkr(summaryTotals.totalBankCharges)}</p>
+  </div>
+  <div className={toolbarStyles.metricCard}>
+    <p className={toolbarStyles.label}>Paid Invoices</p>
+    <p className={toolbarStyles.value} >{summaryTotals.paidCount}</p>
+  </div>
+  <div className={toolbarStyles.metricCard}>
+    <p className={toolbarStyles.label}>Unpaid Invoices</p>
+    <p className={toolbarStyles.value}>{summaryTotals.unpaidCount}</p>
+  </div>
+  <div className={toolbarStyles.metricCard}>
+    <p className={toolbarStyles.label}>Total Receivables</p>
+    <p className={toolbarStyles.value}>{formatPkr(summaryTotals.totalAmount)}</p>
+  </div>
+</div>
       </div>
     </div>
   );

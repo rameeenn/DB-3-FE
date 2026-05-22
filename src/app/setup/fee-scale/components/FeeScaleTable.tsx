@@ -311,6 +311,8 @@ export default function FeeScaleTable({
     { key: 'taxPercentage', header: 'Tax %' },
     { key: 'discountPercentage', header: 'Discount %', render: (value) => value === null || value === undefined || value === '' ? '-' : value },
     { key: 'mdrPercentage', header: 'MDR %', render: (value) => value === null || value === undefined || value === '' ? '-' : value },
+    {key: 'dhaPercentage', header: 'DHA %', render: (value) => value === null || value === undefined || value === '' ? '-' : value },
+    {key: 'halconPercentage', header: 'Halcon %', render: (value) => value === null || value === undefined || value === '' ? '-' : value },
     { key: 'fedTaxPercentage', header: 'FED Tax %', render: (value) => value === null || value === undefined || value === '' ? '-' : value },
     { key: 'discountValidFrom', header: 'Discount Valid From', render: (value) => value ? formatDateDisplay(value) : '-' },
     { key: 'discountValidTo', header: 'Discount Valid To', render: (value) => value ? formatDateDisplay(value) : '-' },
