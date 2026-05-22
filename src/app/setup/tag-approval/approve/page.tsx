@@ -16,6 +16,7 @@ import {
   normalizeApprovalDateRange,
   normalizeTagNumberForApi,
   resolveTagTypeIdForApproval,
+  ApproveTagApprovalRequestPayload,
 } from '../../../../services/approval.service';
 
 export default function AddNewTag() {
@@ -247,50 +248,122 @@ export default function AddNewTag() {
   const visibleFields = isQrTagType ? [] : approveFields;
 
   const handleSave = async (formData: ProfileFormData) => {
-    if (!data?.data) {
-      return false;
-    }
+  if (!data?.data) {
+    return false;
+  }
 
-    const tag = data.data;
+  const tag = data.data;
+  const isQrTag = tag.tagType?.toLowerCase().includes('qr');
 
-    const tagTypeId =
+  // For QR tags, find the QR tag type ID from the tagTypeData
+  let tagTypeId = '';
+  if (isQrTag) {
+    const qrTagType = tagTypeData?.data?.find(
+      (tt: any) => tt.name?.toLowerCase() === 'qr'
+    );
+    tagTypeId = qrTagType?.id || '';
+  } else {
+    tagTypeId =
       resolveTagTypeIdForApproval(tagTypeData?.data, tag.tagType || (formData.tagType as string | undefined)) ||
       '00a07f67-9150-417a-fd67-08de8b030b56';
+  }
 
-    const rawFrom = toIsoDate(String(formData.validFrom || tag.validFrom || ''));
-    const rawTo = toIsoDate(String(formData.validTo || tag.validTo || ''));
-    const { validFrom, validTo } = normalizeApprovalDateRange(rawFrom, rawTo);
+  const rawFrom = toIsoDate(String(formData.validFrom || tag.validFrom || ''));
+  const rawTo = toIsoDate(String(formData.validTo || tag.validTo || ''));
+  const { validFrom, validTo } = normalizeApprovalDateRange(rawFrom, rawTo);
 
-    const planNum = formData.planType !== undefined && formData.planType !== '' ? Number(formData.planType) : 0;
-    const isQr = tag.tagType?.toLowerCase().includes('qr');
-    const payload = {
-  tagApprovalRequestId: String(formData.tagApprovalRequestId || tag.id),
-  entityName: String(formData.name || tag.subjectName || ''),
-  entityId: String(formData.entityId || tag.subjectId || ''),
-  tagNumber: normalizeTagNumberForApi(String(formData.tagNumber || tag.tagNumber || '')),
-  tagTypeId,
-
-  validFrom,
-  validTo,
-
-  status: toStatusValue(formData.status),
-
-  feeScaleId: String(formData.feeScaleId || tag.feeScale || ''),
-
-  // 🔥 FIXED REQUIRED FIELDS (THIS IS YOUR 400 ROOT CAUSE)
-  zoneId: tag.zoneId || undefined,
-deviceId: tag.deviceId || undefined,
-zoneIds: tag.zoneIds?.length ? tag.zoneIds : undefined,
-
-  trialPeriod: String(formData.trialPeriod || 'Unknown'),
-
-  planType: formData.planType ? String(formData.planType) : '0',
-};
-
-    console.log('approveTagApprovalRequest payload:', payload);
-
-    return approveTagRequest(payload);
+  // Build base payload for all tags
+  const payload: any = {
+    tagApprovalRequestId: String(formData.tagApprovalRequestId || tag.id),
+    entityName: String(formData.name || tag.subjectName || '').trim(),
+    entityId: String(formData.entityId || tag.subjectId || ''),
+    tagNumber: normalizeTagNumberForApi(String(formData.tagNumber || tag.tagNumber || '')),
+    tagTypeId: tagTypeId,
+    validFrom: validFrom,
+    validTo: validTo,
+    status: toStatusValue(formData.status),
   };
+
+  // For non-QR tags, add additional fields
+  if (!isQrTag) {
+    // Get the selected plan type value
+    const selectedPlanType = formData.planType || tag.planType || '';
+    
+    // Map plan type value to the expected string format
+    let planTypeString = 'unknown';
+    if (selectedPlanType) {
+      const planTypeNum = Number(selectedPlanType);
+      switch (planTypeNum) {
+        case 1:
+          planTypeString = 'day';
+          break;
+        case 2:
+          planTypeString = 'week';
+          break;
+        case 3:
+          planTypeString = 'month';
+          break;
+        case 4:
+          planTypeString = 'year';
+          break;
+        default:
+          planTypeString = 'unknown';
+      }
+    }
+
+    payload.feeScaleId = String(formData.feeScaleId || tag.feeScale || '');
+    payload.trialPeriod = String(formData.trialPeriod || tag.trialPeriod || 'Unknown');
+    payload.planType = planTypeString;
+    
+    if (tag.zoneId) {
+      payload.zoneId = tag.zoneId;
+    }
+    
+    if (tag.deviceId) {
+      payload.deviceId = tag.deviceId;
+    }
+    
+    if (tag.zoneIds?.length) {
+      payload.zoneIds = tag.zoneIds;
+    }
+  }
+
+  console.log('Sending payload:', JSON.stringify(payload, null, 2));
+  
+  // Validate required fields
+  if (!payload.tagApprovalRequestId || payload.tagApprovalRequestId.length !== 36) {
+    console.error('Invalid tagApprovalRequestId:', payload.tagApprovalRequestId);
+    throw new Error('Invalid Tag Approval Request ID');
+  }
+  
+  if (!payload.entityName || payload.entityName.trim() === '') {
+    console.error('Missing entityName');
+    throw new Error('Entity Name is required');
+  }
+  
+  if (!payload.entityId || payload.entityId.length !== 36) {
+    console.error('Invalid entityId:', payload.entityId);
+    throw new Error('Invalid Entity ID');
+  }
+  
+  if (!payload.tagNumber || payload.tagNumber.trim() === '') {
+    console.error('Missing tagNumber');
+    throw new Error('Tag Number is required');
+  }
+  
+  if (!payload.tagTypeId || payload.tagTypeId.length !== 36) {
+    console.error('Invalid tagTypeId:', payload.tagTypeId);
+    throw new Error('Invalid Tag Type ID');
+  }
+
+  // Only validate feeScaleId for non-QR tags
+  if (!isQrTag && (!payload.feeScaleId || payload.feeScaleId.length !== 36)) {
+    console.error('Invalid feeScaleId:', payload.feeScaleId);
+    throw new Error('Invalid Fee Scale ID');
+  }
+
+  return approveTagRequest(payload);
+};
 
   // Map fetched data to form fields
   let initialValues: Partial<ProfileFormData> = {};

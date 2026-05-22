@@ -95,9 +95,6 @@ export interface ApproveTagApprovalRequestPayload {
   feeScaleId: string;
   trialPeriod: string;
   planType?: string;
-  zoneId?: string;
-  deviceId?: string;
-  zoneIds?: string[];
 }
 
 export const approveTagApprovalRequest = async (payload: ApproveTagApprovalRequestPayload): Promise<any> => {

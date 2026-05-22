@@ -73,7 +73,7 @@ export default function InvoiceTable(props: InvoiceTableProps) {
   const invoiceQueryPayload = useMemo(
     () => ({
       pageNumber: currentPage,
-      pageSize: 10,
+      pageSize: 0,
       ...(invoiceNumberFilter.trim() ? { invoiceNumber: invoiceNumberFilter.trim() } : {}),
       ...(fromIso ? { fromDate: fromIso } : {}),
       ...(toIso ? { toDate: toIso } : {}),

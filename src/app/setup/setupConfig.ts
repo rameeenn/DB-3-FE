@@ -14,7 +14,7 @@ export const SETUP_TABS: SetupTab[] = [
   { key: 'fee-scale', label: 'Fee Scale' },
   { key: 'invoice', label: 'Invoice' },
   { key: 'tag', label: 'Tag' },
-  { key: 'tag-approval', label: 'Approve' },
+  { key: 'approve-tags', label: 'Approve' },
   { key: 'tag-log', label: 'Approved tags' },
   { key: 'tag-type', label: 'Tag Type' },
   { key: 'newcard', label: 'Card Management' }
