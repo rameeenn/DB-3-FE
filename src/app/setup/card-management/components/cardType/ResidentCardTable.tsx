@@ -1,71 +1,71 @@
-'use client';
-import { useState } from 'react';
-import DataTable from '@/components/tables/DataTable';
-import styles from '../CardManagementTable.module.css';
-import { cardColumns } from './cardColumns';
-import { CardRow, CardTypeTableProps } from './types';
+// 'use client';
+// import { useState } from 'react';
+// import DataTable from '@/components/tables/DataTable';
+// import styles from '../CardManagementTable.module.css';
+// import { cardColumns } from './cardColumns';
+// import { CardRow, CardTypeTableProps } from './types';
 
-type ResidentTableTab = 'member-card' | 'non-member-card';
+// type ResidentTableTab = 'member-card' | 'non-member-card';
 
-const memberRows: CardRow[] = [
-  { userName: 'Shahid Hussain', email: 'shahid@gmail.com', phone: '0301-2346550', cnicNo: '12345-1234567-1', userType: 'Member', rfidCardNo: 'UID-9278645300001192', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 3 },
-  { userName: 'Ahmed Faraz', email: 'ahmed@gmail.com', phone: '0301-2346540', cnicNo: '12345-4564567-1', userType: 'Member', rfidCardNo: 'UID-9278645300001144', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 6 },
-  { userName: 'Mustafa Javaid', email: 'mustafa@gmail.com', phone: '0301-2346530', cnicNo: '12345-4522267-1', userType: 'Member', rfidCardNo: 'UID-9278645300001136', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 3 },
-  { userName: 'Arsalan Khan', email: 'arsalan@gmail.com', phone: '0301-2346520', cnicNo: '12345-4528907-1', userType: 'Member', rfidCardNo: 'UID-9278645300001100', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 5 },
-];
+// const memberRows: CardRow[] = [
+//   { userName: 'Shahid Hussain', email: 'shahid@gmail.com', phone: '0301-2346550', cnicNo: '12345-1234567-1', userType: 'Member', rfidCardNo: 'UID-9278645300001192', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 3 },
+//   { userName: 'Ahmed Faraz', email: 'ahmed@gmail.com', phone: '0301-2346540', cnicNo: '12345-4564567-1', userType: 'Member', rfidCardNo: 'UID-9278645300001144', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 6 },
+//   { userName: 'Mustafa Javaid', email: 'mustafa@gmail.com', phone: '0301-2346530', cnicNo: '12345-4522267-1', userType: 'Member', rfidCardNo: 'UID-9278645300001136', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 3 },
+//   { userName: 'Arsalan Khan', email: 'arsalan@gmail.com', phone: '0301-2346520', cnicNo: '12345-4528907-1', userType: 'Member', rfidCardNo: 'UID-9278645300001100', cardIssueDate: '07-02-2025', cardExpiryDate: '07-02-2026', cardStatus: 5 },
+// ];
 
-const nonMemberRows: CardRow[] = memberRows.map((row, index) => ({
-  ...row,
-  userType: 'Non Member',
-  rfidCardNo: `UID-92786453000011${92 + index}`,
-}));
+// const nonMemberRows: CardRow[] = memberRows.map((row, index) => ({
+//   ...row,
+//   userType: 'Non Member',
+//   rfidCardNo: `UID-92786453000011${92 + index}`,
+// }));
 
 
-export default function ResidentCardTable({ tabs, activeTab, onTabChange, mainTabsHeader }: CardTypeTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [activeSubTab, setActiveSubTab] = useState<ResidentTableTab>('member-card');
+// export default function ResidentCardTable({ tabs, activeTab, onTabChange, mainTabsHeader }: CardTypeTableProps) {
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [activeSubTab, setActiveSubTab] = useState<ResidentTableTab>('member-card');
 
-  const rows = activeSubTab === 'member-card' ? memberRows : nonMemberRows;
+//   const rows = activeSubTab === 'member-card' ? memberRows : nonMemberRows;
 
-  return (
-    <DataTable<CardRow>
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      columns={cardColumns}
-      data={rows}
-      showAddButton={false}
-      currentPage={currentPage}
-      onPageChange={setCurrentPage}
-      enableSorting={true}
-      filterPlaceholder="Name"
-      searchVariant="card-management"
-      showSearchActionButton
-      headerContent={
-        <div>
-          {mainTabsHeader}
-        </div>
-      }
-      tableUpperContent={
-        <div className={styles.subTabs}>
-            {[
-              { key: 'member-card', label: 'Member Card' },
-              { key: 'non-member-card', label: 'Non Member Card' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                className={`${styles.subTab} ${activeSubTab === tab.key ? styles.subTabActive : ''}`}
-                onClick={() => {
-                  setActiveSubTab(tab.key as ResidentTableTab);
-                  setCurrentPage(1);
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-      }
-    />
-  );
-}
+//   return (
+//     <DataTable<CardRow>
+//       tabs={tabs}
+//       activeTab={activeTab}
+//       onTabChange={onTabChange}
+//       columns={cardColumns}
+//       data={rows}
+//       showAddButton={false}
+//       currentPage={currentPage}
+//       onPageChange={setCurrentPage}
+//       enableSorting={true}
+//       filterPlaceholder="Name"
+//       searchVariant="card-management"
+//       showSearchActionButton
+//       headerContent={
+//         <div>
+//           {mainTabsHeader}
+//         </div>
+//       }
+//       tableUpperContent={
+//         <div className={styles.subTabs}>
+//             {[
+//               { key: 'member-card', label: 'Member Card' },
+//               { key: 'non-member-card', label: 'Non Member Card' },
+//             ].map((tab) => (
+//               <button
+//                 key={tab.key}
+//                 type="button"
+//                 className={`${styles.subTab} ${activeSubTab === tab.key ? styles.subTabActive : ''}`}
+//                 onClick={() => {
+//                   setActiveSubTab(tab.key as ResidentTableTab);
+//                   setCurrentPage(1);
+//                 }}
+//               >
+//                 {tab.label}
+//               </button>
+//             ))}
+//           </div>
+//       }
+//     />
+//   );
+// }
