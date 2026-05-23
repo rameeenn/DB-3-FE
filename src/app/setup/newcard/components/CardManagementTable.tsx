@@ -1,29 +1,18 @@
+// CardManagementTable.tsx (updated version)
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import html2canvas from 'html2canvas';
 
-import DataTable, {
-  Column,
-  Tab,
-} from '../../../../components/tables/DataTable';
-
+import DataTable, { Column, Tab } from '../../../../components/tables/DataTable';
 import CircularButton from '../../../../components/ui/CircularButton';
 import FormModal from '../../../../components/popup/FormModal';
-
 import { useGetCardManagementListing } from '../../../../hooks/newcard/useGetCardManagementListing';
-
-interface CardRow {
-  id: string;
-  userName: string;
-  cnic: string;
-  userType: string;
-  category: string;
-  subCategory: string;
-  cardIssueDate: string;
-  cardExpiryDate: string;
-  address: string;
-}
+import ResidentNonMemberCard from './cards/ResidentNonMemberCard';
+import EmployeeCard from './cards/EmployeeCard';
+import CreekClubCard from './cards/CreekClubCard';
+import { CardData } from './cards/types';
 
 interface Props {
   tabs: Tab[];
@@ -41,117 +30,153 @@ export default function CardManagementTable({
   addButtonLabel,
 }: Props) {
   const router = useRouter();
+  const frontCardRef = useRef<HTMLDivElement>(null);
+  const backCardRef = useRef<HTMLDivElement>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-
   const [selectedUserType, setSelectedUserType] = useState('All');
-
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewRow, setPreviewRow] = useState<CardRow | null>(null);
+  const [previewRow, setPreviewRow] = useState<CardData | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { data, isLoading } = useGetCardManagementListing();
 
-  const handlePreview = (row: CardRow) => {
+  // Helper function to determine which card component to use
+  const getCardComponent = (row: CardData) => {
+    if (row.userType === 'NonMember' && row.category === 'Resident') {
+      return ResidentNonMemberCard;
+    }
+    if (row.userType === 'Employee') {
+      return EmployeeCard;
+    }
+     if (row.category === 'Club Member' || row.category === 'DA Creek Club') {
+    return CreekClubCard;
+  }
+    // if (row.userType === 'Member' && row.category === 'Resident') {
+    //   return ResidentMemberCard;
+    // }
+    
+    // Default fallback
+    return ResidentNonMemberCard;
+  };
+
+  const handlePreview = (row: CardData) => {
     setPreviewRow(row);
     setPreviewOpen(true);
   };
 
-  const handlePrint = () => {
-    window.print();
+  const downloadAsJPG = async (element: HTMLElement, filename: string) => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const canvas = await html2canvas(element, {
+        scale: 4,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 0,
+        onclone: (clonedDoc) => {
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach((img: HTMLImageElement) => {
+            if (img.src && img.src.includes('gwp.dhakarachi.org')) {
+              img.crossOrigin = 'anonymous';
+              img.onerror = () => {
+                img.src = '/fallback-profile.png';
+              };
+            }
+          });
+        }
+      });
+      
+      const link = document.createElement('a');
+      link.download = `${filename}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 1.0);
+      link.click();
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    }
+  };
+
+  const handleDownloadFront = async () => {
+    if (frontCardRef.current) {
+      setIsDownloading(true);
+      const fileName = `${previewRow?.userName || 'Card'}_${previewRow?.id?.slice(0, 8) || 'UID'}_FRONT`;
+      await downloadAsJPG(frontCardRef.current, fileName);
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadBack = async () => {
+    if (backCardRef.current) {
+      setIsDownloading(true);
+      const fileName = `${previewRow?.userName || 'Card'}_${previewRow?.id?.slice(0, 8) || 'UID'}_BACK`;
+      await downloadAsJPG(backCardRef.current, fileName);
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadBoth = async () => {
+    await handleDownloadFront();
+    setTimeout(async () => {
+      await handleDownloadBack();
+    }, 1000);
   };
 
   const userTypeOptions = useMemo(() => {
-  const items = data?.data?.items?.items ?? [];
+    const items = data?.data?.items?.items ?? [];
+    const uniqueTypes = Array.from(
+      new Set(items.map((item: any) => item.entityDetails?.externalUser?.userType))
+    );
+    return ['All', ...uniqueTypes.filter(Boolean)];
+  }, [data]);
 
-  const uniqueTypes = Array.from(
-    new Set(items.map((item: any) => item.entityDetails?.externalUser?.userType))
-  );
+  const tableData: CardData[] = useMemo(() => {
+    const items = data?.data?.items?.items ?? [];
 
-  return ['All', ...uniqueTypes.filter(Boolean)];
-}, [data]);
+    return items.map((item: any) => {
+      const externalUser = item.entityDetails?.externalUser;
+      const clubMember = item.entityDetails?.externalClubMember;
+      const parentUser = item.entityDetails?.parentUser;
 
-  const tableData: CardRow[] = useMemo(() => {
-  const items = data?.data?.items?.items ?? [];
+      const formatFullDate = (dateString: string): string => {
+        if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString();
+      };
 
-  return items.map((item: any) => {
-    const externalUser = item.entityDetails?.externalUser;
-    const clubMember = item.entityDetails?.externalClubMember;
-    const parentUser = item.entityDetails?.parentUser;
+      return {
+        id: item.id,
+        userName: externalUser?.name || clubMember?.username || parentUser?.name || item.userName || '-',
+        cnic: externalUser?.cnic || clubMember?.cnic || parentUser?.cnic || '-',
+        userType: externalUser?.userType || parentUser?.userType || item.entityName || '-',
+        category: clubMember?.category || parentUser?.category || externalUser?.category || '-',
+        subCategory: clubMember?.subCategory || parentUser?.subCategory || externalUser?.subCategory || '-',
+        cardIssueDate: formatFullDate(externalUser?.cardIssueDate || parentUser?.cardIssueDate || clubMember?.validFrom || item.validFrom),
+        cardExpiryDate: formatFullDate(externalUser?.cardExpiryDate || parentUser?.cardExpiryDate || clubMember?.validTo || item.validTo),
+        address: externalUser?.address || parentUser?.address || '-',
+        profilePictureUrl: externalUser?.profilePictureUrl || clubMember?.profilePictureUrl || parentUser?.profilePictureUrl || null,
+        staffNo: externalUser?.staffNo || clubMember?.staffNo || parentUser?.staffNo || '-',
+        hierarchicalId: externalUser?.hierarchicalId || clubMember?.hierarchicalId || parentUser?.hierarchicalId || item.hierarchicalId || '-',
+        memberNo: clubMember?.memberNo || '-',
+      };
+    });
+  }, [data]);
 
-    const name =
-      externalUser?.name ||
-      clubMember?.username ||
-      parentUser?.name ||
-      item.userName ||
-      '-';
-
-    const cnic =
-      externalUser?.cnic ||
-      clubMember?.cnic ||
-      parentUser?.cnic ||
-      '-';
-
-    const userType =
-      externalUser?.userType ||
-      parentUser?.userType ||
-      item.entityName ||
-      '-';
-
-    const category =
-      clubMember?.category ||
-      parentUser?.category ||
-      externalUser?.category ||
-      '-';
-
-    const subCategory =
-      clubMember?.subCategory ||
-      parentUser?.subCategory ||
-      externalUser?.subCategory ||
-      '-';
-
-    const issue =
-      externalUser?.cardIssueDate ||
-      parentUser?.cardIssueDate ||
-      clubMember?.validFrom ||
-      item.validFrom;
-
-    const expiry =
-      externalUser?.cardExpiryDate ||
-      parentUser?.cardExpiryDate ||
-      clubMember?.validTo ||
-      item.validTo;
-
-    return {
-      id: item.id,
-      userName: name,
-      cnic,
-      userType,
-      category,
-      subCategory,
-      cardIssueDate: issue && issue !== '0001-01-01T00:00:00'
-        ? new Date(issue).toLocaleDateString()
-        : '-',
-      cardExpiryDate: expiry && expiry !== '0001-01-01T00:00:00'
-        ? new Date(expiry).toLocaleDateString()
-        : '-',
-      address:
-        externalUser?.address ||
-        parentUser?.address ||
-        '-',
-    };
-  });
-}, [data, selectedUserType]);
-
-  const columns: Column<CardRow>[] = [
+  const columns: Column<CardData>[] = [
+    { key: 'profilePictureUrl', header: 'Profile', render: (value) => value ? <img src={value} alt="Profile" style={{ width: 32, height: 32, borderRadius: '50%' }} /> : '-' },
     { key: 'userName', header: 'User Name' },
     { key: 'cnic', header: 'CNIC' },
     { key: 'userType', header: 'User Type' },
     { key: 'category', header: 'Category' },
     { key: 'subCategory', header: 'Sub Category' },
+    { key: 'staffNo', header: 'Staff No' },
+    { key: 'hierarchicalId', header: 'Hierarchical ID' },
+    { key: 'memberNo', header: 'Membership No' },
     { key: 'cardIssueDate', header: 'Issue Date' },
     { key: 'cardExpiryDate', header: 'Expiry Date' },
     { key: 'address', header: 'Address' },
-
     {
       key: 'action',
       header: 'Action',
@@ -169,54 +194,12 @@ export default function CardManagementTable({
     },
   ];
 
+  // Get the appropriate card component for the selected row
+  const CardComponent = previewRow ? getCardComponent(previewRow) : null;
+
   return (
     <>
-      <style jsx global>{`
-        @media print {
-  @page {
-    size: 86mm 54mm;   /* PVC CARD SIZE */
-    margin: 0;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-  }
-
-  body * {
-    visibility: hidden;
-  }
-
-  #printable-cards,
-  #printable-cards * {
-    visibility: visible;
-  }
-
-  #printable-cards {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 86mm;
-    height: 54mm;
-    margin: 0;
-    padding: 0;
-  }
-
-  .print-card {
-    width: 86mm !important;
-    height: 54mm !important;
-    page-break-after: always;
-    margin: 0 !important;
-    box-shadow: none !important;
-  }
-
-  button {
-    display: none !important;
-  }
-}
-      `}</style>
-
-      <DataTable<CardRow>
+      <DataTable<CardData>
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
@@ -225,9 +208,7 @@ export default function CardManagementTable({
         loading={isLoading}
         showAddButton={true}
         addButtonLabel={addButtonLabel}
-        onAddClick={() =>
-          router.push('/setup/card-management?modal=add')
-        }
+        onAddClick={() => router.push('/setup/card-management?modal=add')}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         userTypeOptions={userTypeOptions}
@@ -238,278 +219,59 @@ export default function CardManagementTable({
       <FormModal
         isOpen={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        title="Resident Non Member Card Preview"
+        title="Card Preview"
       >
-        {previewRow && (
-          <div
-  id="printable-cards"
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-    alignItems: 'center',
-  }}
->
-  {/* CARDS ROW */}
-  <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', }}>
-    {/* FRONT CARD */}
-    <div
-  className="print-card"
-  style={{
-    position: 'relative',
-    width: '86mm',
-    height: '54mm',
-    overflow: 'hidden',
-    borderRadius: '12px',
-    backgroundImage:
-      "url('/card-templates/resident/ResidentNonMember_front.svg')",
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-    boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
-  }}
->
-  <div
-    style={{
-      color: '#e2c172',
-      fontFamily: 'Arial',
-    }}
-  >
-    {/* CARD HOLDER */}
-    <div
-      style={{
-        position: 'absolute',
-        top: '29mm', // ⬆ moved down (was 24mm)
-        left: '6mm',
-        fontSize: '2.3mm',
-        fontWeight: 100,
-        letterSpacing: '0.4px',
-      }}
-    >
-      Card Holder
-    </div>
+        {previewRow && CardComponent && (
+          <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '20px' }}>
+            {/* Hidden cards for download */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+              <div ref={frontCardRef}>
+                <CardComponent data={previewRow} side="front" isDownload={true} />
+              </div>
+              <div ref={backCardRef} style={{ marginTop: '20px' }}>
+                <CardComponent data={previewRow} side="back" isDownload={true} />
+              </div>
+            </div>
 
-    {/* USER NAME */}
-    <div
-      style={{
-        position: 'absolute',
-        top: '32.5mm', // ⬆ moved down (was 27.5mm)
-        left: '6mm',
-        width: '42mm',
+            {/* Visible preview for screen */}
+            <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', marginBottom: '30px' }}>
+              <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}>
+                <CardComponent data={previewRow} side="front" />
+              </div>
+              <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}>
+                <CardComponent data={previewRow} side="back" />
+              </div>
+            </div>
 
-        fontSize: '3mm',
-        fontWeight: 500,
-
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
-        textOverflow: 'ellipsis',
-      }}
-    >
-      {previewRow.userName || 'My Name'}
-    </div>
-
-    {/* LABELS */}
-    <div
-      style={{
-        position: 'absolute',
-        top: '40mm', // ⬆ moved down (was 36mm)
-        left: '6mm',
-        display: 'flex',
-        gap: '10mm',
-
-        fontSize: '1.9mm',
-        fontWeight: 100,
-        letterSpacing: '0.2px',
-      }}
-    >
-      <span>Card Issue</span>
-      <span>Valid Thru</span>
-    </div>
-
-    {/* VALUES */}
-    <div
-      style={{
-        position: 'absolute',
-        top: '43.2mm', // ⬆ moved down (was 39.2mm)
-        left: '6mm',
-        display: 'flex',
-        gap: '12.5mm',
-
-        fontSize: '3mm',
-        fontWeight: 200,
-      }}
-    >
-      <span>12/26</span>
-      <span>12/27</span>
-    </div>
-  </div>
-
-  {/* USER IMAGE */}
-  <img
-    src="https://i.pravatar.cc/400?img=12"
-    alt="User"
-    style={{
-      position: 'absolute',
-
-      right: '5.3mm',
-      top: '27.5mm', // ⬆ moved down (was 16.5mm)
-      border: '1px solid #e2c172',
-      width: '17mm',
-      height: '20mm',
-      objectFit: 'cover',
-      borderRadius: '2mm',
-    }}
-  />
-</div>
-
-    {/* BACK CARD */}
-    <div
-  className="print-card"
-  style={{
-    position: 'relative',
-
-    width: '86mm',
-    height: '54mm',
-
-    overflow: 'hidden',
-    borderRadius: '12px',
-
-    backgroundImage:
-      "url('/card-templates/resident/ResidentNonMember_back.svg')",
-
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-
-    boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
-  }}
->
-  {/* QR - moved slightly DOWN */}
-  <img
-    src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=DHA_CARD_TEST"
-    alt="QR"
-    style={{
-      position: 'absolute',
-
-      left: '6.3mm',
-      top: '37mm', // ⬅ moved down (was 15mm)
-
-      width: '13mm',
-      height: '13mm',
-
-      background: '#fff',
-      padding: '1mm',
-    }}
-  />
-
-  {/* TEXT BLOCK - now aligned to LEFT like front card */}
-  <div
-    style={{
-      position: 'absolute',
-      top: '5mm',
-      left: '6mm', // ⬅ FIXED (was 30mm → now aligned left like front)
-      color: '#e2c172',
-      fontFamily: 'Arial',
-    }}
-  >
-    {/* CNIC */}
-    <div style={{marginBottom:'3mm'}}>
-    <div style={{ marginBottom: '4mm' }}>
-  <div style={{ fontSize: '1.9mm', fontWeight: 100 }}>
-    CNIC No.
-  </div>
-
-  <div style={{ marginTop: '0.8mm', fontSize: '3mm', fontWeight: 200 }}>
-    {previewRow.cnic || '42101-1234567-1'}
-  </div>
-</div>
-</div>
-    {/* CARD NO */}
-    <div style={{marginBottom:'3mm'}}>
-<div
-  style={{
-    marginBottom: '4mm',
-  }}
->
-  <div
-    style={{
-      fontSize: '1.9mm',
-      fontWeight: 100,
-      letterSpacing: '0.2px',
-    }}
-  >
-    Card No.
-  </div>
-
-  <div
-    style={{
-      marginTop: '0.8mm',
-      fontSize: '3mm',
-      fontWeight: 200,
-    }}
-  >
-    1234 1234 1234 1234
-  </div>
-</div>
-</div>
-<div style={{marginBottom:'3mm'}}>
-{/* ADDRESS */}
-<div
-  style={{
-    width: '60mm',
-  }}
->
-  <div
-    style={{
-      fontSize: '1.9mm',
-      fontWeight: 100,
-      letterSpacing: '0.2px',
-    }}
-  >
-    Address
-  </div>
-
-  <div
-    style={{
-      marginTop: '0.8mm',
-      fontSize: '3mm',
-      fontWeight: 200,
-      lineHeight: '3.3mm',
-    }}
-  >
-    Plot no. 1234, Khayaban e Iqbal Zone B, DHA Karachi
-  </div>
-  </div>
-</div>
-  </div>
-</div>
-    </div>
-
-  {/* BUTTONS */}
-  <div
-    style={{
-      display: 'flex',
-      gap: '12px',
-      marginTop: '8px',
-    }}
-  >
-
-    {/* <button
-      onClick={handlePrint}
-      style={{
-        padding: '10px 18px',
-        borderRadius: '8px',
-        border: 'none',
-        background: 'green',
-        color: '#fff',
-        cursor: 'pointer',
-        fontWeight: 600,
-      }}
-    >
-      Print Card
-    </button> */}
-  </div>
-</div>
+            {/* BUTTONS */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              justifyContent: 'center',
+              position: 'sticky',
+              bottom: 0,
+              background: 'white',
+              padding: '15px 0',
+              borderTop: '1px solid #e5e7eb',
+              marginTop: '10px'
+            }}>
+              <button
+                onClick={handleDownloadBoth}
+                disabled={isDownloading}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#10B981',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                {isDownloading ? 'Downloading...' : 'Download Card'}
+              </button>
+            </div>
+          </div>
         )}
       </FormModal>
     </>

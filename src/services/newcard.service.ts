@@ -10,6 +10,10 @@ export interface CardManagementUser {
   subCategory: string | null;
   cardIssueDate: string | null;
   cardExpiryDate: string | null;
+  profilePictureUrl: string | null;
+  staffNo: string | null;
+  hierarchicalId: string | null;
+  memberNo: string | null;
 }
 
 export interface GetCardManagementResponse {
