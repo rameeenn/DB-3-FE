@@ -49,12 +49,10 @@ export default function CardManagementTable({
     if (row.userType === 'Employee') {
       return EmployeeCard;
     }
-     if (row.category === 'Club Member' || row.category === 'DA Creek Club') {
-    return CreekClubCard;
-  }
-    // if (row.userType === 'Member' && row.category === 'Resident') {
-    //   return ResidentMemberCard;
-    // }
+     if (row.category === 'Club Member' && row.subCategory === 'DA Creek Club') {
+      return CreekClubCard;
+    }
+    
     
     // Default fallback
     return ResidentNonMemberCard;

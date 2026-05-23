@@ -62,17 +62,16 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
     fontFamily: 'Arial, sans-serif',
   };
 
-  // Get the profile image source (with fallback to default)
-  const getProfileImageSrc = () => {
-    if (profileImageError) {
-      return '/card-templates/defaultprofilepic.jpg';
-    }
-    const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
-    if (proxiedUrl) {
-      return proxiedUrl;
-    }
+const getProfileImageSrc = () => {
+  // Only use default if there's no profile picture URL or if image failed to load
+  if (!data.profilePictureUrl || profileImageError) {
     return '/card-templates/defaultprofilepic.jpg';
-  };
+  }
+  
+  // Otherwise use the proxied image URL
+  const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
+  return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
+};
 
   if (!templateLoaded) {
     return (
