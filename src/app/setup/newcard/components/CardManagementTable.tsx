@@ -49,50 +49,13 @@ export default function CardManagementTable({
   const [previewRow, setPreviewRow] = useState<CardData | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadStage, setDownloadStage] = useState<'front' | 'back' | null>(null);
-
-  const fetchBase64 = async (url: string | null): Promise<string> => {
-  if (!url) return '/card-templates/defaultprofilepic.jpg';
-
-  // Strategy 1: Fetch directly (works if no CORS restriction)
-  try {
-    const res = await fetch(url, { mode: 'cors' });
-    if (res.ok) {
-      const blob = await res.blob();
-      return await blobToBase64(blob);
-    }
-  } catch {
-    // CORS blocked, try proxy
-  }
-
-  // Strategy 2: Try proxy
-  try {
-    const proxied = `/api/proxy-image?url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxied);
-    if (res.ok) {
-      const blob = await res.blob();
-      return await blobToBase64(blob);
-    }
-  } catch {
-    // Proxy also failed
-  }
-
-  // Strategy 3: Return the original URL and let the browser handle it
-  // html2canvas will try with useCORS: true
-  return url;
-};
-
-const blobToBase64 = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
+  
+  // Cache for base64 images
+  const imageCache = useRef<Map<string, string>>(new Map());
 
   // Helper function to determine which card component to use
   const getCardComponent = (row: CardData) => {
-     if (row.category === 'Club Member' && row.subCategory === 'DA Creek Club') {
+    if (row.category === 'Club Member' && row.subCategory === 'DA Creek Club') {
       return CreekClubCard;
     }
     if (row.category === 'Club Member' && row.subCategory === 'Defence Authority Club') {
@@ -119,7 +82,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     if (row.userType === 'NonMember' && (row.category === 'Resident' || row.subCategory === 'Resident' || row.subCategory === 'Commercial')) {
       return ResidentNonMemberCard;
     }
-    if(row.userType === 'StaffAndMember') {
+    if (row.userType === 'StaffAndMember') {
       return StaffMemberCard;
     }
     if (row.userType === 'Employee' || (row.category === 'DHA Employee' && row.subCategory !== 'StaffAndMember')) {
@@ -135,209 +98,71 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   
   const totalPages = data?.data?.items?.totalPages || 1;
 
-  // In CardManagementTable.tsx
-
-const handlePreview = (row: CardData) => {
-  setPreviewRow(row); // No async, no proxy — just open immediately
-  setPreviewOpen(true);
-};
-
-const handleDownloadBoth = async () => {
-  if (!previewRow) return;
-  setIsDownloading(true);
-
-  const fileName = `${previewRow.userName || 'Card'}_${previewRow.id?.slice(0, 8) || 'UID'}`;
-
-  const frontEl = document.querySelector('.front-card-preview') as HTMLElement;
-  const backEl = document.querySelector('.back-card-preview') as HTMLElement;
-
-  // Find the already-loaded profile image in the DOM
-  // It's already rendered and loaded — we just grab it
-  const profileImg = frontEl?.querySelector('img[alt="Employee"]') as HTMLImageElement
-    ?? frontEl?.querySelector('img[alt="Profile"]') as HTMLImageElement;
-
-  const drawCard = async (element: HTMLElement, filename: string) => {
-    const canvas = await html2canvas(element, {
-      scale: 4,
-      backgroundColor: '#ffffff',
-      useCORS: true,
-      allowTaint: true, // KEY: allow tainted canvas from cross-origin images
-      logging: false,
-      imageTimeout: 0,
-      onclone: (clonedDoc, clonedEl) => {
-        // Replace the img src with a blob URL of the already-loaded image
-        if (profileImg?.complete && profileImg.naturalWidth > 0) {
-          const canvas2 = document.createElement('canvas');
-          canvas2.width = profileImg.naturalWidth;
-          canvas2.height = profileImg.naturalHeight;
-          const ctx = canvas2.getContext('2d');
-          ctx?.drawImage(profileImg, 0, 0);
-          
-          // Find the same img in the clone and replace src with data URL
-          const clonedImgs = clonedEl.querySelectorAll('img');
-          clonedImgs.forEach((img) => {
-            if (img.alt === 'Employee' || img.alt === 'Profile') {
-              try {
-                img.src = canvas2.toDataURL('image/jpeg');
-              } catch {
-                // Image was cross-origin and tainted, leave as is
-              }
-            }
-          });
-        }
-      },
-    });
-
-    const link = document.createElement('a');
-    link.download = `${filename}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 1.0);
-    link.click();
-  };
-
-  try {
-    setDownloadStage('front');
-    if (frontEl) await drawCard(frontEl, `${fileName}_FRONT`);
-
-    setDownloadStage('back');
-    if (backEl) await drawCard(backEl, `${fileName}_BACK`);
-  } finally {
-    setDownloadStage(null);
-    setIsDownloading(false);
-  }
-};
-
-  // Wait for all images in an element to load
-  const waitForImages = async (element: HTMLElement): Promise<void> => {
-    const images = element.querySelectorAll('img');
-    const imagePromises = Array.from(images).map((img) => {
-      if (img.complete) {
-        return Promise.resolve();
-      }
-      return new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-        img.onerror = () => resolve(); // Resolve even on error to continue
-      });
-    });
-    await Promise.all(imagePromises);
-  };
-
-  const downloadAsJPG = async (element: HTMLElement, filename: string) => {
+  // Handle image load and cache as base64
+  const handleImageLoad = (url: string, imgEl: HTMLImageElement) => {
+    if (imageCache.current.has(url)) return;
     try {
-      // Wait for images to load
-      await waitForImages(element);
-      
-      // Additional delay to ensure rendering
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      const canvas = document.createElement('canvas');
+      canvas.width = imgEl.naturalWidth;
+      canvas.height = imgEl.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(imgEl, 0, 0);
+      const base64 = canvas.toDataURL('image/jpeg');
+      imageCache.current.set(url, base64);
+    } catch {
+      // Will be tainted if CORS blocks it — that's fine, just won't cache
+    }
+  };
+
+  // Handle preview - use cached base64 if available
+  const handlePreview = (row: CardData) => {
+    const cachedImage = row.profilePictureUrl 
+      ? imageCache.current.get(row.profilePictureUrl) 
+      : null;
+    
+    setPreviewRow({
+      ...row,
+      profilePictureUrl: cachedImage || row.profilePictureUrl,
+    });
+    setPreviewOpen(true);
+  };
+
+  const handleDownloadBoth = async () => {
+    if (!previewRow) return;
+    setIsDownloading(true);
+
+    const fileName = `${previewRow.userName || 'Card'}_${previewRow.id?.slice(0, 8) || 'UID'}`;
+
+    const frontEl = document.querySelector('.front-card-preview') as HTMLElement;
+    const backEl = document.querySelector('.back-card-preview') as HTMLElement;
+
+    const drawCard = async (element: HTMLElement, filename: string) => {
       const canvas = await html2canvas(element, {
         scale: 4,
         backgroundColor: '#ffffff',
         useCORS: true,
-        allowTaint: false,
+        allowTaint: true,
         logging: false,
-        imageTimeout: 30000,
+        imageTimeout: 0,
       });
-      
+
       const link = document.createElement('a');
       link.download = `${filename}.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 1.0);
       link.click();
-      
-      return true;
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      return false;
+    };
+
+    try {
+      setDownloadStage('front');
+      if (frontEl) await drawCard(frontEl, `${fileName}_FRONT`);
+
+      setDownloadStage('back');
+      if (backEl) await drawCard(backEl, `${fileName}_BACK`);
+    } finally {
+      setDownloadStage(null);
+      setIsDownloading(false);
     }
   };
-
-  // const handleDownloadBoth = async () => {
-  //   if (!previewRow) return;
-    
-  //   setIsDownloading(true);
-    
-  //   const fileName = `${previewRow.userName || 'Card'}_${previewRow.id?.slice(0, 8) || 'UID'}`;
-    
-  //   // Get the visible card elements
-  //   const frontCardElement = document.querySelector('.front-card-preview') as HTMLElement;
-  //   const backCardElement = document.querySelector('.back-card-preview') as HTMLElement;
-    
-  //   if (frontCardElement && backCardElement) {
-  //     // Create temporary containers for cloning
-  //     const tempContainer = document.createElement('div');
-  //     tempContainer.style.position = 'fixed';
-  //     tempContainer.style.left = '-9999px';
-  //     tempContainer.style.top = '0';
-  //     tempContainer.style.backgroundColor = '#fff';
-  //     document.body.appendChild(tempContainer);
-      
-  //     try {
-  //       // Process front card
-  //       setDownloadStage('front');
-  //       const frontClone = frontCardElement.cloneNode(true) as HTMLElement;
-  //       frontClone.style.width = '86mm';
-  //       frontClone.style.height = '54mm';
-  //       frontClone.style.margin = '0';
-  //       frontClone.style.padding = '0';
-  //       frontClone.style.borderRadius = '0';
-  //       frontClone.style.boxShadow = 'none';
-  //       tempContainer.innerHTML = '';
-  //       tempContainer.appendChild(frontClone);
-        
-  //       await waitForImages(frontClone);
-  //       await new Promise(resolve => setTimeout(resolve, 300));
-        
-  //       const frontCanvas = await html2canvas(frontClone, {
-  //         scale: 4,
-  //         backgroundColor: '#ffffff',
-  //         useCORS: true,
-  //         allowTaint: false,
-  //         logging: false,
-  //         imageTimeout: 30000,
-  //       });
-        
-  //       const frontLink = document.createElement('a');
-  //       frontLink.download = `${fileName}_FRONT.jpg`;
-  //       frontLink.href = frontCanvas.toDataURL('image/jpeg', 1.0);
-  //       frontLink.click();
-        
-  //       // Process back card
-  //       setDownloadStage('back');
-  //       const backClone = backCardElement.cloneNode(true) as HTMLElement;
-  //       backClone.style.width = '86mm';
-  //       backClone.style.height = '54mm';
-  //       backClone.style.margin = '0';
-  //       backClone.style.padding = '0';
-  //       backClone.style.borderRadius = '0';
-  //       backClone.style.boxShadow = 'none';
-  //       tempContainer.innerHTML = '';
-  //       tempContainer.appendChild(backClone);
-        
-  //       await waitForImages(backClone);
-  //       await new Promise(resolve => setTimeout(resolve, 300));
-        
-  //       const backCanvas = await html2canvas(backClone, {
-  //         scale: 4,
-  //         backgroundColor: '#ffffff',
-  //         useCORS: true,
-  //         allowTaint: false,
-  //         logging: false,
-  //         imageTimeout: 30000,
-  //       });
-        
-  //       const backLink = document.createElement('a');
-  //       backLink.download = `${fileName}_BACK.jpg`;
-  //       backLink.href = backCanvas.toDataURL('image/jpeg', 1.0);
-  //       backLink.click();
-        
-  //     } finally {
-  //       // Clean up
-  //       document.body.removeChild(tempContainer);
-  //     }
-  //   }
-    
-  //   setDownloadStage(null);
-  //   setIsDownloading(false);
-  // };
 
   const userTypeOptions = useMemo(() => {
     const items = data?.data?.items?.items ?? [];
@@ -389,7 +214,19 @@ const handleDownloadBoth = async () => {
   }, [data]);
 
   const columns: Column<CardData>[] = [
-    { key: 'profilePictureUrl', header: 'Profile', render: (value) => value ? <img src={value} alt="Profile" style={{ width: 32, height: 32, borderRadius: '50%' }} /> : '-' },
+    { 
+      key: 'profilePictureUrl', 
+      header: 'Profile', 
+      render: (value) => value ? (
+        <img 
+          src={value} 
+          alt="Profile" 
+          style={{ width: 32, height: 32, borderRadius: '50%' }} 
+          onLoad={(e) => handleImageLoad(value, e.currentTarget)}
+          crossOrigin="anonymous"
+        />
+      ) : '-' 
+    },
     { key: 'userName', header: 'User Name' },
     { key: 'cnic', header: 'CNIC' },
     { key: 'userType', header: 'User Type' },
