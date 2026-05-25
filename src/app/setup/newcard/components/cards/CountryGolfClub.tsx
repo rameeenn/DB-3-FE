@@ -1,14 +1,13 @@
-// components/cards/CreekClubCard.tsx
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
 import { CardData, CardComponentProps } from './types';
 
-interface CreekClubCardProps extends CardComponentProps {
+interface CountryGolfClubCardProps extends CardComponentProps {
   side: 'front' | 'back';
 }
 
-export default function CreekClubCard({ data, side, cardRef, isDownload = false }: CreekClubCardProps) {
+export default function CountryGolfClubCard({ data, side, cardRef, isDownload = false }: CountryGolfClubCardProps) {
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
@@ -42,8 +41,8 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
   useEffect(() => {
     const img = new Image();
     const templatePath = side === 'front' 
-      ? '/card-templates/clubs/Creek_front.svg'
-      : '/card-templates/clubs/Creek_back.svg';
+      ? '/card-templates/clubs/CountryGolf_front.svg'
+      : '/card-templates/clubs/CountryGolf_back.svg';
     img.src = templatePath;
     img.onload = () => setTemplateLoaded(true);
     img.onerror = () => setImageError(true);
@@ -84,7 +83,7 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
           height: '100%',
           backgroundColor: '#f0f0f0'
         }}>
-          Loading Creek Club {side} card...
+          Loading Country and Gold Club {side} card...
         </div>
       </div>
     );
@@ -95,8 +94,8 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
       <div ref={ref} style={cardWrapperStyle}>
         {!imageError ? (
           <img 
-            src="/card-templates/clubs/Creek_front.svg" 
-            alt="Creek Club Front Card Template"
+            src="/card-templates/clubs/CountryGolf_front.svg" 
+            alt="Country and Golf Club Front Card Template"
             style={{ 
               width: '100%', 
               height: '100%', 
@@ -148,7 +147,7 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
         <div style={{ 
           position: 'absolute', 
           bottom: '5mm', 
-          right: '11mm', 
+          right: '6mm', 
           zIndex: 2, 
           ...textStyle,
           textAlign: 'right',
@@ -170,8 +169,8 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
     <div ref={ref} style={cardWrapperStyle}>
       {!imageError ? (
         <img 
-          src="/card-templates/clubs/Creek_back.svg" 
-          alt="Creek Club Back Card Template"
+          src="/card-templates/clubs/CountryGolf_back.svg" 
+          alt="Country and Golf Club Back Card Template"
           style={{ 
             width: '100%', 
             height: '100%', 
@@ -195,17 +194,17 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
           justifyContent: 'center',
           color: '#e2c172'
         }}>
-          Creek Club Card Template
+          Country and Golf Club Card Template
         </div>
       )}
       
       {/* Back side information */}
-      <div style={{ position: 'absolute', top: '5mm', left: '6mm', zIndex: 2, ...textStyle, width: '70mm' }}>
+      <div style={{ position: 'absolute', top: '5mm', left: '7.1mm', zIndex: 2, ...textStyle, width: '60mm' }}>
         {/* Row 1: CNIC and Card No in one row */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between',
-          marginBottom: '4mm',
+          marginBottom: '3mm',
           gap: '0mm'
         }}>
           {/* CNIC */}
@@ -233,7 +232,7 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between',
-          marginBottom: '4mm',
+          marginBottom: '3mm',
           gap: '0mm'
         }}>
           {/* Club Membership No */}
@@ -248,27 +247,27 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
           
           {/* Card Issue */}
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '12mm' }}>
+            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '10.5mm' }}>
               Card Issue
             </div>
-            <div style={{ fontSize: '2.5mm', fontWeight: 200, marginLeft: '12mm' }}>
+            <div style={{ fontSize: '2.5mm', fontWeight: 200, marginLeft: '10.5mm' }}>
               {formattedIssueDate}
             </div>
           </div>
           
           {/* Valid Thru */}
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '1mm' }}>
+            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '2mm' }}>
               Valid Thru
             </div>
-            <div style={{ fontSize: '2.5mm', fontWeight: 200, marginLeft: '1mm' }}>
+            <div style={{ fontSize: '2.5mm', fontWeight: 200, marginLeft: '2mm' }}>
               {formattedExpiryDate}
             </div>
           </div>
         </div>
 
         {/* Row 3: Status (User Type) */}
-        <div style={{ marginBottom: '4mm' }}>
+        <div style={{ marginBottom: '3mm' }}>
           <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
             Status
           </div>
@@ -278,7 +277,7 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
         </div>
 
         {/* Row 4: Address */}
-        <div style={{ marginBottom: '4mm' }}>
+        <div style={{ marginBottom: '3mm' }}>
           <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
             Address
           </div>

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -45,7 +45,7 @@ const getMenuIcon = (path: string, isActive: boolean): string => {
 export default function DashboardLayout({
   children,
   pageTitle = "Dashboard",
-  userName = "Ahmed Faraz",
+  userName = "User",
   userAvatarUrl,
   headerAction,
   showBackButton,
@@ -60,7 +60,6 @@ export default function DashboardLayout({
   const [accounteMenuOpen, setAccountMenuOpen] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === 'undefined') return true;
-
     const storedSidebarState = window.localStorage.getItem('dashboardSidebarOpen');
     return storedSidebarState === null ? true : storedSidebarState === 'true';
   });
@@ -68,11 +67,54 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const isSetupPage = pathname?.startsWith('/setup');
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
   
+  // Store scroll position in localStorage
+  const saveScrollPosition = () => {
+    if (typeof window !== 'undefined' && tabsScrollRef.current) {
+      localStorage.setItem('tabsScrollPosition', String(tabsScrollRef.current.scrollLeft));
+    }
+  };
+  
+  // Restore scroll position on load
+  useEffect(() => {
+    if (typeof window !== 'undefined' && tabsScrollRef.current) {
+      const savedPosition = localStorage.getItem('tabsScrollPosition');
+      if (savedPosition) {
+        tabsScrollRef.current.scrollLeft = parseInt(savedPosition, 10);
+      }
+    }
+  }, [isSetupPage]);
+
+  // Scroll left function
+  const scrollLeft = () => {
+    if (tabsScrollRef.current) {
+      tabsScrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+      // Save position after scroll
+      setTimeout(saveScrollPosition, 300);
+    }
+  };
+
+  // Scroll right function
+  const scrollRight = () => {
+    if (tabsScrollRef.current) {
+      tabsScrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+      // Save position after scroll
+      setTimeout(saveScrollPosition, 300);
+    }
+  };
+
+  // Save scroll position when scrolling
+  useEffect(() => {
+    const scrollElement = tabsScrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', saveScrollPosition);
+      return () => scrollElement.removeEventListener('scroll', saveScrollPosition);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     window.localStorage.setItem('dashboardSidebarOpen', String(sidebarOpen));
   }, [sidebarOpen]);
 
@@ -82,7 +124,6 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const storedFullName = localStorage.getItem('fullName') || sessionStorage.getItem('fullName');
     setDisplayName(storedFullName || userName || 'User');
   }, [userName]);
@@ -105,9 +146,6 @@ export default function DashboardLayout({
             <p style={{ fontSize: "12px", color: "#6b7280" }}>Redefining Urban Living</p>
             <div className={styles.logoSeparator} />
           </div>
-          {/* <button className={styles.closeSidebarBtn} onClick={() => setSidebarOpen(false)}>
-            <X size={24} color="#27ae60" />
-          </button> */}
         </div>
         <nav className={`${styles.menu} ${!sidebarOpen ? styles.menuCollapsed : ''}`}>
           <Link 
@@ -223,19 +261,16 @@ export default function DashboardLayout({
       <main className={`${styles.mainContent} ${sidebarOpen ? styles.mainContentShifted : ''}`}>
         <header className={styles.header}>
           <div className={styles.headerTitleWrapper}>
-            {/* <button className={styles.toggleSidebarBtn} onClick={() => setSidebarOpen(!sidebarOpen)} >
-              <Menu size={24} color="#27ae60" />
-            </button> */}
-              <CircularButton onClick={() => {
-                setSidebarOpen(!sidebarOpen);
-                setMemberTypeOpen(true);
-              }}>
-                {sidebarOpen ?
-                  <ChevronLeft size={24} color="#27ae60" /> 
-                  : 
-                  <ChevronRight size={24} color="#27ae60" />
-                }
-              </CircularButton>
+            <CircularButton onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+              setMemberTypeOpen(true);
+            }}>
+              {sidebarOpen ?
+                <ChevronLeft size={24} color="#27ae60" /> 
+                : 
+                <ChevronRight size={24} color="#27ae60" />
+              }
+            </CircularButton>
             {(showBackButton !== false && (activeMenuItem.match(/\//g)?.length ?? 0) >= 2) || showBackButton === true ? (
               <img 
               src="/icons/arrow-back.png" 
@@ -245,25 +280,49 @@ export default function DashboardLayout({
             />) : null}
             <div className={styles.headerTitle}>{pageTitle}</div>
           </div>
-           {isSetupPage && SETUP_TABS?.length > 0 && (
-  <div className={styles.tabsWrapper}>
-    <div className={styles.tabsScroll}>
-      {SETUP_TABS.map((tab: SetupTab) => {
-        const isActive = pathname.split('/').pop() === tab.key;
-
-        return (
-          <button
-  key={tab.key}
-  onClick={() => router.push(`/setup/${tab.key}`)}
-  className={`${styles.tabItem} ${isActive ? styles.tabActive : ''}`}
->
-  {tab.label}
-</button>
-        );
-      })}
-    </div>
-  </div>
-)}
+          
+          {/* TABS WITH NAVIGATION BUTTONS */}
+          {isSetupPage && SETUP_TABS?.length > 0 && (
+            <div className={styles.tabsWrapper}>
+              {/* Left Scroll Button */}
+              <button 
+                onClick={scrollLeft}
+                className={styles.tabNavButton}
+                aria-label="Scroll tabs left"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              
+              <div className={styles.tabsScroll} ref={tabsScrollRef}>
+                {SETUP_TABS.map((tab: SetupTab) => {
+                  const isActive = pathname.split('/').pop() === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => {
+                        router.push(`/setup/${tab.key}`);
+                        // Save current scroll position before navigation
+                        saveScrollPosition();
+                      }}
+                      className={`${styles.tabItem} ${isActive ? styles.tabActive : ''}`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Right Scroll Button */}
+              <button 
+                onClick={scrollRight}
+                className={styles.tabNavButton}
+                aria-label="Scroll tabs right"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+          
           <div className={styles.headerRight}>
             <div className={styles.userInfoWrapper}>
               <div 

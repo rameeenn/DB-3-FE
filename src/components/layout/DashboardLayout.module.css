@@ -693,77 +693,97 @@
 .headerActionButton:hover {
   background: #28a035;
 }
-.tabsWrapper {
-  flex: 1;              /* takes remaining space */
+/* Tab Navigation Buttons */
+.tabNavButton {
   display: flex;
+  align-items: center;
   justify-content: center;
-
-  min-width: 0;         /* 🔥 CRITICAL */
-  overflow: hidden;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin: 0 4px;
+  color: #27ae60;
 }
 
+.tabNavButton:hover {
+  background: #f5f5f5;
+  border-color: #27ae60;
+}
+
+.tabNavButton:active {
+  transform: scale(0.95);
+}
+
+/* Update tabsWrapper to include buttons */
+.tabsWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  gap: 0px;
+}
+
+/* Update tabsScroll to work with buttons */
 .tabsScroll {
   display: flex;
   overflow-x: auto;
-  white-space: nowrap;
-  max-width: 100%;
-  min-width: 0;
-  /* padding: 4px 10px; */
-  scrollbar-width: none;
   scroll-behavior: smooth;
-  max-width: 420px; /* controls "3 tabs visible" */
-  padding-bottom: 4px;
-  display: flex;
-  overflow-x: auto;
-  align-items: center;
+  max-width: 420px;
+  gap: 0px; /* Add gap between tabs */
+  padding: 4px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1;
 }
 
 .tabsScroll::-webkit-scrollbar {
   display: none;
 }
 
+/* Inactive tabs - smaller size */
 .tabItem {
   flex: 0 0 auto;
-  min-width: 110px;   /* slightly smaller default */
-  padding: 8px 14px;  /* smaller default padding */
-  font-size: 14px;    /* smaller default font */
+  min-width: 90px; /* Reduced from 110px */
+  padding: 6px 10px; /* Reduced from 8px 14px */
+  font-size: 12px; /* Reduced from 14px */
   font-weight: 500;
-
   border-radius: 1px;
   border: 1px solid #dad9d9;
-
   background: #eeeff4f2;
   color: #333;
-
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
   text-align: center;
 }
 
-/* ACTIVE TAB - LARGER */
+/* Active tab - larger size */
 .tabActive {
   background: #ffffff;
   color: #27ae60;
   font-weight: 700;
-
   border: 1px solid #27ae60;
   box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
-
-  /* 🔥 Bigger size */
-  min-width: 140px;     /* wider than default 110px */
-  padding: 12px 24px;   /* more padding = larger tab */
-  font-size: 18px;      /* bigger text */
-
-  transform: scale(1.02); /* optional slight scaling */
+  min-width: 130px; /* Larger than inactive */
+  padding: 10px 20px; /* Larger than inactive */
+  font-size: 16px; /* Larger than inactive */
+  transform: scale(1.02);
 }
 
-/* hover */
+/* Hover effect for inactive tabs */
 .tabItem:hover {
   background: #edeaea;
+  transform: scale(1.01); /* Slight scale on hover for inactive tabs */
 }
 
-/* remove this if you want clean button look */
-.tabActive::after {
-  display: none;
+/* Optional: Add a smooth size transition */
+.tabItem, .tabActive {
+  transition: all 0.3s ease-in-out;
 }

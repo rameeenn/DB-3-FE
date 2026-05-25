@@ -9,9 +9,19 @@ import DataTable, { Column, Tab } from '../../../../components/tables/DataTable'
 import CircularButton from '../../../../components/ui/CircularButton';
 import FormModal from '../../../../components/popup/FormModal';
 import { useGetCardManagementListing } from '../../../../hooks/newcard/useGetCardManagementListing';
+
 import ResidentNonMemberCard from './cards/ResidentNonMemberCard';
 import EmployeeCard from './cards/EmployeeCard';
 import CreekClubCard from './cards/CreekClubCard';
+import VisitorCard from './cards/VisitorCard';
+import DefenceAuthorityClubCard from './cards/DefenceAuthorityClubCard';
+import SportsClubCard from './cards/SportsClubCard';
+import MarinaClubCard from './cards/MarinaClub.Card';
+import ZamzamaClubCard from './cards/ZamzamaClubCard';
+import BeachViewClubCard from './cards/BeachViewClub';
+import SunsetClubCard from './cards/SunsetClub';
+import CountryGolfClubCard from './cards/CountryGolfClub';
+
 import { CardData } from './cards/types';
 
 interface Props {
@@ -43,7 +53,7 @@ export default function CardManagementTable({
 
   // Helper function to determine which card component to use
   const getCardComponent = (row: CardData) => {
-    if (row.userType === 'NonMember' && row.category === 'Resident') {
+    if (row.userType === 'NonMember' && row.category === 'Resident' && row.subCategory === 'Resident' || row.subCategory === 'Commercial') {
       return ResidentNonMemberCard;
     }
     if (row.userType === 'Employee') {
@@ -52,8 +62,31 @@ export default function CardManagementTable({
      if (row.category === 'Club Member' && row.subCategory === 'DA Creek Club') {
       return CreekClubCard;
     }
-    
-    
+    if (row.userType === 'Visitor') {
+      return VisitorCard;
+    }
+    if (row.category === 'Club Member' && row.subCategory === 'Defence Authority Club') {
+      return DefenceAuthorityClubCard;
+    }
+    if (row.category === 'Club Member' && row.subCategory === 'Sports Club') {
+      return SportsClubCard;
+    }
+    if (row.category === 'Club Member' && row.subCategory === 'DA Marina Club') {
+      return MarinaClubCard;
+    }
+    if (row.category === 'Club Member' && row.subCategory === 'DA Zamzama Club') {
+      return ZamzamaClubCard;
+    }
+    if (row.category === 'Club Member' && row.subCategory === 'DA Beach View Club') {
+      return BeachViewClubCard;
+    }
+    if (row.category === 'Club Member' && row.subCategory === 'DA Sunset Club') {
+      return SunsetClubCard;
+    }
+    if (row.category === 'Club Member' && row.subCategory === 'DA Country & Golf Club') {
+      return CountryGolfClubCard;
+    }
+
     // Default fallback
     return ResidentNonMemberCard;
   };
