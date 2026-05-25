@@ -34,11 +34,16 @@ export interface GetCardManagementResponse {
 };
 }
 
-export const getCardManagementListing = async () => {
-  const response =
-    await apiClient.get<GetCardManagementResponse>(
-      '/user/GetCardManagementListing'
-    );
-
+// services/newcard.service.ts
+export const getCardManagementListing = async (pageNumber: number = 1, pageSize: number = 10) => {
+  const response = await apiClient.get<GetCardManagementResponse>(
+    '/user/GetCardManagementListing',
+    {
+      params: {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      },
+    }
+  );
   return response.data;
 };

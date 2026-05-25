@@ -1,13 +1,14 @@
+// components/cards/ResidentNonMemberCard.tsx
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
 import { CardData, CardComponentProps } from './types';
 
-interface SunsetClubCardProps extends CardComponentProps {
+interface StaffMemberCardProps extends CardComponentProps {
   side: 'front' | 'back';
 }
 
-export default function SunsetClubCard({ data, side, cardRef, isDownload = false }: SunsetClubCardProps) {
+export default function StaffMemberCard({ data, side, cardRef, isDownload = false }: StaffMemberCardProps) {
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
@@ -41,7 +42,7 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
   // Generate QR code and convert to data URL to avoid CORS issues
   useEffect(() => {
     const generateQRCode = async () => {
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=CLUB_CARD_${data.id || 'TEST'}`;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=DHA_CARD_${data.id || 'TEST'}`;
       
       try {
         const response = await fetch(qrUrl);
@@ -64,8 +65,8 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
   useEffect(() => {
     const img = new Image();
     const templatePath = side === 'front' 
-      ? '/card-templates/clubs/Sunset_front.svg'
-      : '/card-templates/clubs/Sunset_back.svg';
+      ? '/card-templates/worker/WorkerResidential_front.svg'
+      : '/card-templates/worker/WorkerResidential_back.svg';
     img.src = templatePath;
     img.onload = () => setTemplateLoaded(true);
     img.onerror = () => setImageError(true);
@@ -80,7 +81,7 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
   };
 
   const textStyle = {
-    color: '#e9cb86',
+    color: '#12110f',
     fontFamily: 'Arial, sans-serif',
   };
 
@@ -102,7 +103,7 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
           height: '100%',
           backgroundColor: '#f0f0f0'
         }}>
-          Loading Sunset Club {side} card...
+          Loading {side} card...
         </div>
       </div>
     );
@@ -113,8 +114,8 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
       <div ref={ref} style={cardWrapperStyle}>
         {!imageError ? (
           <img 
-            src="/card-templates/clubs/Sunset_front.svg" 
-            alt="Sunset Club Front Card Template"
+            src="/card-templates/worker/WorkerResidential_front.svg" 
+            alt="Front Card Template"
             style={{ 
               width: '100%', 
               height: '100%', 
@@ -138,47 +139,44 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
             justifyContent: 'center',
             color: '#e2c172'
           }}>
-            Sunset Club Card Template
+            Card Template
           </div>
         )}
+        <div style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', ...textStyle }}>
+          <div style={{ position: 'absolute', top: '29mm', left: '6mm', fontSize: '2.3mm', fontWeight: 100, letterSpacing: '0.4px' }}>
+            Card Holder
+          </div>
+          <div style={{ position: 'absolute', top: '32.5mm', left: '6mm', width: '42mm', fontSize: '3mm', fontWeight: 500, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+            {data.userName || 'My Name'}
+          </div>
+          <div style={{ position: 'absolute', top: '40mm', left: '6mm', display: 'flex', gap: '10mm', fontSize: '1.9mm', fontWeight: 100, letterSpacing: '0.2px' }}>
+            <span>Card Issue</span>
+            <span>Valid Thru</span>
+          </div>
+          <div style={{ position: 'absolute', top: '43.2mm', left: '6mm', display: 'flex', gap: '12.5mm', fontSize: '3mm', fontWeight: 200 }}>
+            <span>{formattedIssueDate}</span>
+            <span>{formattedExpiryDate}</span>
+          </div>
+        </div>
         
-        {/* Profile Image */}
+        {/* Profile Photo */}
         <img
           src={getProfileImageSrc()}
-          alt="Member"
+          alt="User"
           crossOrigin="anonymous"
           onError={() => setProfileImageError(true)}
           style={{
             position: 'absolute',
-            left: '71mm',
-            top: '35mm',
-            transform: 'translate(-50%, -50%)',
+            right: '5mm',
+            top: '27.5mm',
+            border: '1px solid #12110f',
             width: '18mm',
             height: '20mm',
             objectFit: 'cover',
             borderRadius: '2mm',
-            border: '1px solid #e2c172',
             zIndex: 2,
           }}
         />
-
-        {/* Username at bottom right */}
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '5mm', 
-          right: '11mm', 
-          zIndex: 2, 
-          ...textStyle,
-          textAlign: 'right',
-          fontSize: '2.5mm',
-          fontWeight: 500,
-          maxWidth: '50mm',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis'
-        }}>
-          {data.userName || 'Member Name'}
-        </div>
       </div>
     );
   }
@@ -188,8 +186,8 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
     <div ref={ref} style={cardWrapperStyle}>
       {!imageError ? (
         <img 
-          src="/card-templates/clubs/Sunset_back.svg" 
-          alt="Sunset Club Back Card Template"
+          src="/card-templates/worker/WorkerResidential_back.svg" 
+          alt="Back Card Template"
           style={{ 
             width: '100%', 
             height: '100%', 
@@ -211,96 +209,12 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#e2c172'
+          color: '#12110f'
         }}>
-          Sunset Club Card Template
+          Card Template
         </div>
       )}
       
-      {/* Back side information */}
-      <div style={{ position: 'absolute', top: '5mm', left: '7.1mm', zIndex: 2, ...textStyle, width: '60mm' }}>
-        {/* Row 1: CNIC and Card No in one row */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          marginBottom: '3mm',
-          gap: '0mm'
-        }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
-              CNIC No.
-            </div>
-            <div style={{ fontSize: '2.5mm', fontWeight: 200 }}>
-              {data.cnic !== '-' ? data.cnic : '42101-1234567-1'}
-            </div>
-          </div>
-          
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
-              Card No.
-            </div>
-            <div style={{ fontSize: '2.5mm', fontWeight: 200 }}>
-              {data.hierarchicalId || '-'}
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2: Club Membership No, Card Issue, Valid Thru in one row */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          marginBottom: '3mm',
-          gap: '0mm'
-        }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
-              Club Membership No.
-            </div>
-            <div style={{ fontSize: '2.5mm', fontWeight: 200 }}>
-              {data.memberNo || '-'}
-            </div>
-          </div>
-          
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '10.5mm' }}>
-              Card Issue
-            </div>
-            <div style={{ fontSize: '2.5mm', fontWeight: 200, marginLeft: '10.5mm' }}>
-              {formattedIssueDate}
-            </div>
-          </div>
-          
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '2mm' }}>
-              Valid Thru
-            </div>
-            <div style={{ fontSize: '2.5mm', fontWeight: 200, marginLeft: '2mm' }}>
-              {formattedExpiryDate}
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3: Status (User Type) */}
-        <div style={{ marginBottom: '3mm' }}>
-          <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
-            Status
-          </div>
-          <div style={{ fontSize: '2.5mm', fontWeight: 200 }}>
-            {data.userType !== '-' ? data.userType : 'Member'}
-          </div>
-        </div>
-
-        {/* Row 4: Address */}
-        <div style={{ marginBottom: '3mm' }}>
-          <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
-            Address
-          </div>
-          <div style={{ fontSize: '2.5mm', fontWeight: 200, lineHeight: '2.8mm' }}>
-            {data.address !== '-' ? data.address : 'DHA Karachi, Pakistan'}
-          </div>
-        </div>
-      </div>
-
       {/* QR Code - using data URL to avoid CORS issues */}
       {qrCodeSrc && (
         <img
@@ -308,16 +222,41 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
           alt="QR"
           style={{
             position: 'absolute',
-            right: '6mm',
-            bottom: '6mm',
-            width: '12mm',
-            height: '12mm',
+            left: '6.3mm',
+            top: '37mm',
+            width: '13mm',
+            height: '13mm',
             background: '#fff',
             padding: '1mm',
             zIndex: 2,
           }}
         />
       )}
+      
+      <div style={{ position: 'absolute', top: '5mm', left: '6mm', zIndex: 2, ...textStyle }}>
+        <div style={{ marginBottom: '3mm' }}>
+          <div style={{ marginBottom: '4mm' }}>
+            <div style={{ fontSize: '1.9mm', fontWeight: 100 }}>CNIC No.</div>
+            <div style={{ marginTop: '0.8mm', fontSize: '3mm', fontWeight: 200 }}>
+              {data.cnic !== '-' ? data.cnic : '42101-1234567-1'}
+            </div>
+          </div>
+        </div>
+        <div style={{ marginBottom: '3mm' }}>
+          <div style={{ marginBottom: '4mm' }}>
+            <div style={{ fontSize: '1.9mm', fontWeight: 100, letterSpacing: '0.2px' }}>Card No.</div>
+            <div style={{ marginTop: '0.8mm', fontSize: '3mm', fontWeight: 200 }}>{data.hierarchicalId || '-'}</div>
+          </div>
+        </div>
+        <div style={{ marginBottom: '3mm' }}>
+          <div style={{ width: '60mm' }}>
+            <div style={{ fontSize: '1.9mm', fontWeight: 100, letterSpacing: '0.2px' }}>Address</div>
+            <div style={{ marginTop: '0.8mm', fontSize: '3mm', fontWeight: 200, lineHeight: '3.3mm' }}>
+              {data.address !== '-' ? data.address : 'Plot no. 1234, Khayaban e Iqbal Zone B, DHA Karachi'}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

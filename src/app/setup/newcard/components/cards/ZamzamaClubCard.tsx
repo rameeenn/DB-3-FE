@@ -11,9 +11,15 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
+  const [qrCodeSrc, setQrCodeSrc] = useState<string>('');
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
+
+  const getProxiedImageUrl = (originalUrl: string | null) => {
+    if (!originalUrl) return null;
+    if (originalUrl.startsWith('/')) return originalUrl;
+    return `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`;
+  };
 
   const formatToMonthYear = (dateString: string): string => {
     if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
@@ -32,8 +38,27 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
     ? formatToMonthYear(data.cardExpiryDate)
     : '12/27';
 
-  // Log the profile picture URL for debugging
-  console.log('Zamzama Club Card - Profile Picture URL:', data.profilePictureUrl);
+  // Generate QR code and convert to data URL to avoid CORS issues
+  useEffect(() => {
+    const generateQRCode = async () => {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=CLUB_CARD_${data.id || 'TEST'}`;
+      
+      try {
+        const response = await fetch(qrUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setQrCodeSrc(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        console.error('Failed to load QR code:', error);
+        setQrCodeSrc(qrUrl);
+      }
+    };
+    
+    generateQRCode();
+  }, [data.id]);
 
   // Preload template
   useEffect(() => {
@@ -60,35 +85,11 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
   };
 
   const getProfileImageSrc = () => {
-    console.log('getProfileImageSrc called - profileImageError:', profileImageError, 'hasUrl:', !!data.profilePictureUrl);
-    
-    // Only use default if there's no profile picture URL
-    if (!data.profilePictureUrl) {
-      console.log('No profile picture URL, using default');
+    if (!data.profilePictureUrl || profileImageError) {
       return '/card-templates/defaultprofilepic.jpg';
     }
-    
-    // If image failed to load, use default
-    if (profileImageError) {
-      console.log('Image failed to load, using default');
-      return '/card-templates/defaultprofilepic.jpg';
-    }
-    
-    // Otherwise use the direct URL
-    console.log('Using direct URL:', data.profilePictureUrl);
-    return data.profilePictureUrl;
-  };
-
-  const handleImageLoad = () => {
-    console.log('Zamzama Club image loaded successfully:', data.profilePictureUrl);
-    setImageLoading(false);
-    setProfileImageError(false);
-  };
-
-  const handleImageError = () => {
-    console.error('Zamzama Club image failed to load:', data.profilePictureUrl);
-    setImageLoading(false);
-    setProfileImageError(true);
+    const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
+    return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
   };
 
   if (!templateLoaded) {
@@ -141,66 +142,48 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
           </div>
         )}
         
-        {/* Loading placeholder */}
-        {data.profilePictureUrl && imageLoading && !profileImageError && (
-          <div style={{
-            position: 'absolute',
-            left: '71mm',
-            top: '35mm',
-            transform: 'translate(-50%, -50%)',
-            width: '18mm',
-            height: '20mm',
-            backgroundColor: '#f0f0f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '2mm',
-            zIndex: 2,
-            fontSize: '2mm',
-            color: '#666'
-          }}>
-            Loading...
-          </div>
-        )}
-        
         {/* Profile Image */}
-        <img
-          src={getProfileImageSrc()}
-          alt="Member"
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-          style={{
-            position: 'absolute',
-            left: '71mm',
-            top: '35mm',
-            transform: 'translate(-50%, -50%)',
-            width: '18mm',
-            height: '20mm',
-            objectFit: 'cover',
-            borderRadius: '2mm',
-            border: '1px solid #e2c172',
-            zIndex: 2,
-            display: (data.profilePictureUrl && imageLoading && !profileImageError) ? 'none' : 'block'
-          }}
-        />
+{/* Profile Image */}
+<img
+  src={getProfileImageSrc()}
+  alt="Member"
+  crossOrigin="anonymous"
+  onError={() => setProfileImageError(true)}
+  style={{
+    position: 'absolute',
+    left: '71mm',
+    top: '25mm',
+    transform: 'translateX(-50%)',
+    width: '18mm',
+    height: '20mm',
+    objectFit: 'cover',
+    borderRadius: '2mm',
+    border: '1px solid #e2c172',
+    zIndex: 2,
+  }}
+/>
 
-        {/* Username at bottom right */}
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '5mm', 
-          right: '10mm', 
-          zIndex: 2, 
-          ...textStyle,
-          textAlign: 'right',
-          fontSize: '2.5mm',
-          fontWeight: 500,
-          maxWidth: '50mm',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis'
-        }}>
-          {data.userName || 'Member Name'}
-        </div>
+{/* Username centered beneath the picture */}
+<div style={{ 
+  position: 'absolute', 
+  left: '71mm',
+  top: '47mm',
+  transform: 'translateX(-50%)',
+  zIndex: 2, 
+  ...textStyle,
+  textAlign: 'center',
+  fontSize: '2.5mm',
+  fontWeight: 500,
+  maxWidth: '40mm',
+  whiteSpace: 'normal',
+  lineHeight: '1.3',
+  overflow: 'hidden',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+}}>
+  {data.userName || 'Member Name'}
+</div>
       </div>
     );
   }
@@ -248,7 +231,6 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
           marginBottom: '3mm',
           gap: '0mm'
         }}>
-          {/* CNIC */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
               CNIC No.
@@ -258,7 +240,6 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
             </div>
           </div>
           
-          {/* Card No */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
               Card No.
@@ -276,7 +257,6 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
           marginBottom: '3mm',
           gap: '0mm'
         }}>
-          {/* Club Membership No */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
               Club Membership No.
@@ -286,7 +266,6 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
             </div>
           </div>
           
-          {/* Card Issue */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '10.5mm' }}>
               Card Issue
@@ -296,7 +275,6 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
             </div>
           </div>
           
-          {/* Valid Thru */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '2mm' }}>
               Valid Thru
@@ -328,21 +306,23 @@ export default function ZamzamaClubCard({ data, side, cardRef, isDownload = fals
         </div>
       </div>
 
-      {/* QR Code at bottom right */}
-      <img
-        src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=CLUB_CARD_${data.id || 'TEST'}`}
-        alt="QR"
-        style={{
-          position: 'absolute',
-          right: '6mm',
-          bottom: '6mm',
-          width: '12mm',
-          height: '12mm',
-          background: '#fff',
-          padding: '1mm',
-          zIndex: 2,
-        }}
-      />
+      {/* QR Code - using data URL to avoid CORS issues */}
+      {qrCodeSrc && (
+        <img
+          src={qrCodeSrc}
+          alt="QR"
+          style={{
+            position: 'absolute',
+            right: '6mm',
+            bottom: '6mm',
+            width: '12mm',
+            height: '12mm',
+            background: '#fff',
+            padding: '1mm',
+            zIndex: 2,
+          }}
+        />
+      )}
     </div>
   );
 }

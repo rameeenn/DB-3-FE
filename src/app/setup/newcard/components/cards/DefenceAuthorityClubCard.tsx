@@ -11,6 +11,7 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
+  const [qrCodeSrc, setQrCodeSrc] = useState<string>('');
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
 
@@ -36,6 +37,32 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
   const formattedExpiryDate = data.cardExpiryDate !== '-'
     ? formatToMonthYear(data.cardExpiryDate)
     : '12/27';
+
+  // Generate QR code and convert to data URL to avoid CORS issues
+  useEffect(() => {
+    const generateQRCode = async () => {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=CLUB_CARD_${data.id || 'TEST'}`;
+      
+      try {
+        // Fetch the QR code as a blob
+        const response = await fetch(qrUrl);
+        const blob = await response.blob();
+        
+        // Convert to data URL
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setQrCodeSrc(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        console.error('Failed to load QR code:', error);
+        // Fallback to direct URL
+        setQrCodeSrc(qrUrl);
+      }
+    };
+    
+    generateQRCode();
+  }, [data.id]);
 
   // Preload template
   useEffect(() => {
@@ -63,15 +90,12 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
 
   // Get the profile image source (with fallback to default)
   const getProfileImageSrc = () => {
-  // Only use default if there's no profile picture URL or if image failed to load
-  if (!data.profilePictureUrl || profileImageError) {
-    return '/card-templates/defaultprofilepic.jpg';
-  }
-  
-  // Otherwise use the proxied image URL
-  const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
-  return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
-};
+    if (!data.profilePictureUrl || profileImageError) {
+      return '/card-templates/defaultprofilepic.jpg';
+    }
+    const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
+    return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
+  };
 
   if (!templateLoaded) {
     return (
@@ -119,21 +143,21 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
             justifyContent: 'center',
             color: '#e2c172'
           }}>
-            Creek Club Card Template
+            Defence Authority Club Card Template
           </div>
         )}
         
-        {/* Profile Image - centered or positioned as per design */}
+        {/* Profile Image */}
         <img
-          src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
+          src={getProfileImageSrc()}
           alt="Member"
           crossOrigin="anonymous"
           onError={() => setProfileImageError(true)}
           style={{
             position: 'absolute',
-            left: '71mm',    // X position from left edge
-            top: '35mm',     // Y position from top edge
-            transform: 'translate(-50%, -50%)',
+            left: '71mm',
+            top: '26mm',
+            transform: 'translateX(-50%)',
             width: '18mm',
             height: '20mm',
             objectFit: 'cover',
@@ -143,20 +167,24 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
           }}
         />
 
-        {/* Username at bottom right */}
+        {/* Username centered beneath the picture */}
         <div style={{ 
           position: 'absolute', 
-          bottom: '5mm', 
-          right: '11mm', 
+          left: '71mm',
+          top: '47mm',
+          transform: 'translateX(-50%)',
           zIndex: 2, 
           ...textStyle,
-          textAlign: 'right',
+          textAlign: 'center',
           fontSize: '2.5mm',
           fontWeight: 500,
-          maxWidth: '50mm',
+          maxWidth: '40mm',
+          whiteSpace: 'normal',
+          lineHeight: '1.3',
           overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis'
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
         }}>
           {data.userName || 'Member Name'}
         </div>
@@ -207,7 +235,6 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
           marginBottom: '3mm',
           gap: '0mm'
         }}>
-          {/* CNIC */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
               CNIC No.
@@ -217,7 +244,6 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
             </div>
           </div>
           
-          {/* Card No */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
               Card No.
@@ -235,7 +261,6 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
           marginBottom: '3mm',
           gap: '0mm'
         }}>
-          {/* Club Membership No */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm' }}>
               Club Membership No.
@@ -245,7 +270,6 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
             </div>
           </div>
           
-          {/* Card Issue */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '10.5mm' }}>
               Card Issue
@@ -255,7 +279,6 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
             </div>
           </div>
           
-          {/* Valid Thru */}
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '1.6mm', fontWeight: 100, marginBottom: '1mm', marginLeft: '2mm' }}>
               Valid Thru
@@ -287,21 +310,23 @@ export default function DefenceAuthorityClubCard({ data, side, cardRef, isDownlo
         </div>
       </div>
 
-      {/* QR Code at bottom right */}
-      <img
-        src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=CLUB_CARD_${data.id || 'TEST'}`}
-        alt="QR"
-        style={{
-          position: 'absolute',
-          right: '6mm',
-          bottom: '6mm',
-          width: '12mm',
-          height: '12mm',
-          background: '#fff',
-          padding: '1mm',
-          zIndex: 2,
-        }}
-      />
+      {/* QR Code - using data URL to avoid CORS issues */}
+      {qrCodeSrc && (
+        <img
+          src={qrCodeSrc}
+          alt="QR"
+          style={{
+            position: 'absolute',
+            right: '6mm',
+            bottom: '6mm',
+            width: '12mm',
+            height: '12mm',
+            background: '#fff',
+            padding: '1mm',
+            zIndex: 2,
+          }}
+        />
+      )}
     </div>
   );
 }

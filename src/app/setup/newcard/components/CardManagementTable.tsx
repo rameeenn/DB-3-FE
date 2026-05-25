@@ -1,4 +1,4 @@
-// CardManagementTable.tsx (updated version)
+// CardManagementTable.tsx
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
@@ -21,6 +21,7 @@ import ZamzamaClubCard from './cards/ZamzamaClubCard';
 import BeachViewClubCard from './cards/BeachViewClub';
 import SunsetClubCard from './cards/SunsetClub';
 import CountryGolfClubCard from './cards/CountryGolfClub';
+import StaffMemberCard from './cards/StaffMemberCard';
 
 import { CardData } from './cards/types';
 
@@ -40,30 +41,19 @@ export default function CardManagementTable({
   addButtonLabel,
 }: Props) {
   const router = useRouter();
-  const frontCardRef = useRef<HTMLDivElement>(null);
-  const backCardRef = useRef<HTMLDivElement>(null);
-
+  const [pageSize, setPageSize] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
+  const { data, isLoading } = useGetCardManagementListing(currentPage, pageSize);
   const [selectedUserType, setSelectedUserType] = useState('All');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewRow, setPreviewRow] = useState<CardData | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-
-  const { data, isLoading } = useGetCardManagementListing();
+  const [downloadStage, setDownloadStage] = useState<'front' | 'back' | null>(null);
 
   // Helper function to determine which card component to use
   const getCardComponent = (row: CardData) => {
-    if (row.userType === 'NonMember' && row.category === 'Resident' && row.subCategory === 'Resident' || row.subCategory === 'Commercial') {
-      return ResidentNonMemberCard;
-    }
-    if (row.userType === 'Employee') {
-      return EmployeeCard;
-    }
      if (row.category === 'Club Member' && row.subCategory === 'DA Creek Club') {
       return CreekClubCard;
-    }
-    if (row.userType === 'Visitor') {
-      return VisitorCard;
     }
     if (row.category === 'Club Member' && row.subCategory === 'Defence Authority Club') {
       return DefenceAuthorityClubCard;
@@ -86,19 +76,52 @@ export default function CardManagementTable({
     if (row.category === 'Club Member' && row.subCategory === 'DA Country & Golf Club') {
       return CountryGolfClubCard;
     }
-
+    if (row.userType === 'NonMember' && (row.category === 'Resident' || row.subCategory === 'Resident' || row.subCategory === 'Commercial')) {
+      return ResidentNonMemberCard;
+    }
+    if(row.userType === 'StaffAndMember') {
+      return StaffMemberCard;
+    }
+    if (row.userType === 'Employee' || (row.category === 'DHA Employee' && row.subCategory !== 'StaffAndMember')) {
+      return EmployeeCard;
+    }
+    if (row.userType === 'Visitor') {
+      return VisitorCard;
+    }
+    
     // Default fallback
     return ResidentNonMemberCard;
   };
+  
+  const totalPages = data?.data?.items?.totalPages || 1;
 
   const handlePreview = (row: CardData) => {
     setPreviewRow(row);
     setPreviewOpen(true);
   };
 
+  // Wait for all images in an element to load
+  const waitForImages = async (element: HTMLElement): Promise<void> => {
+    const images = element.querySelectorAll('img');
+    const imagePromises = Array.from(images).map((img) => {
+      if (img.complete) {
+        return Promise.resolve();
+      }
+      return new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // Resolve even on error to continue
+      });
+    });
+    await Promise.all(imagePromises);
+  };
+
   const downloadAsJPG = async (element: HTMLElement, filename: string) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait for images to load
+      await waitForImages(element);
+      
+      // Additional delay to ensure rendering
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       const canvas = await html2canvas(element, {
         scale: 4,
@@ -106,52 +129,108 @@ export default function CardManagementTable({
         useCORS: true,
         allowTaint: false,
         logging: false,
-        imageTimeout: 0,
-        onclone: (clonedDoc) => {
-          const images = clonedDoc.querySelectorAll('img');
-          images.forEach((img: HTMLImageElement) => {
-            if (img.src && img.src.includes('gwp.dhakarachi.org')) {
-              img.crossOrigin = 'anonymous';
-              img.onerror = () => {
-                img.src = '/fallback-profile.png';
-              };
-            }
-          });
-        }
+        imageTimeout: 30000,
       });
       
       const link = document.createElement('a');
       link.download = `${filename}.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 1.0);
       link.click();
+      
+      return true;
     } catch (error) {
       console.error('Error downloading image:', error);
-    }
-  };
-
-  const handleDownloadFront = async () => {
-    if (frontCardRef.current) {
-      setIsDownloading(true);
-      const fileName = `${previewRow?.userName || 'Card'}_${previewRow?.id?.slice(0, 8) || 'UID'}_FRONT`;
-      await downloadAsJPG(frontCardRef.current, fileName);
-      setIsDownloading(false);
-    }
-  };
-
-  const handleDownloadBack = async () => {
-    if (backCardRef.current) {
-      setIsDownloading(true);
-      const fileName = `${previewRow?.userName || 'Card'}_${previewRow?.id?.slice(0, 8) || 'UID'}_BACK`;
-      await downloadAsJPG(backCardRef.current, fileName);
-      setIsDownloading(false);
+      return false;
     }
   };
 
   const handleDownloadBoth = async () => {
-    await handleDownloadFront();
-    setTimeout(async () => {
-      await handleDownloadBack();
-    }, 1000);
+    if (!previewRow) return;
+    
+    setIsDownloading(true);
+    
+    const fileName = `${previewRow.userName || 'Card'}_${previewRow.id?.slice(0, 8) || 'UID'}`;
+    
+    // Get the visible card elements
+    const frontCardElement = document.querySelector('.front-card-preview') as HTMLElement;
+    const backCardElement = document.querySelector('.back-card-preview') as HTMLElement;
+    
+    if (frontCardElement && backCardElement) {
+      // Create temporary containers for cloning
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.backgroundColor = '#fff';
+      document.body.appendChild(tempContainer);
+      
+      try {
+        // Process front card
+        setDownloadStage('front');
+        const frontClone = frontCardElement.cloneNode(true) as HTMLElement;
+        frontClone.style.width = '86mm';
+        frontClone.style.height = '54mm';
+        frontClone.style.margin = '0';
+        frontClone.style.padding = '0';
+        frontClone.style.borderRadius = '0';
+        frontClone.style.boxShadow = 'none';
+        tempContainer.innerHTML = '';
+        tempContainer.appendChild(frontClone);
+        
+        await waitForImages(frontClone);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const frontCanvas = await html2canvas(frontClone, {
+          scale: 4,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          imageTimeout: 30000,
+        });
+        
+        const frontLink = document.createElement('a');
+        frontLink.download = `${fileName}_FRONT.jpg`;
+        frontLink.href = frontCanvas.toDataURL('image/jpeg', 1.0);
+        frontLink.click();
+        
+        // Process back card
+        setDownloadStage('back');
+        const backClone = backCardElement.cloneNode(true) as HTMLElement;
+        backClone.style.width = '86mm';
+        backClone.style.height = '54mm';
+        backClone.style.margin = '0';
+        backClone.style.padding = '0';
+        backClone.style.borderRadius = '0';
+        backClone.style.boxShadow = 'none';
+        tempContainer.innerHTML = '';
+        tempContainer.appendChild(backClone);
+        
+        await waitForImages(backClone);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const backCanvas = await html2canvas(backClone, {
+          scale: 4,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          imageTimeout: 30000,
+        });
+        
+        const backLink = document.createElement('a');
+        backLink.download = `${fileName}_BACK.jpg`;
+        backLink.href = backCanvas.toDataURL('image/jpeg', 1.0);
+        backLink.click();
+        
+      } finally {
+        // Clean up
+        document.body.removeChild(tempContainer);
+      }
+    }
+    
+    setDownloadStage(null);
+    setIsDownloading(false);
   };
 
   const userTypeOptions = useMemo(() => {
@@ -169,6 +248,8 @@ export default function CardManagementTable({
       const externalUser = item.entityDetails?.externalUser;
       const clubMember = item.entityDetails?.externalClubMember;
       const parentUser = item.entityDetails?.parentUser;
+      const worker = item.entityDetails?.externalWorker;
+      const userFamily = item.entityDetails?.externalUserFamily;
 
       const formatFullDate = (dateString: string): string => {
         if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
@@ -187,7 +268,13 @@ export default function CardManagementTable({
         cardIssueDate: formatFullDate(externalUser?.cardIssueDate || parentUser?.cardIssueDate || clubMember?.validFrom || item.validFrom),
         cardExpiryDate: formatFullDate(externalUser?.cardExpiryDate || parentUser?.cardExpiryDate || clubMember?.validTo || item.validTo),
         address: externalUser?.address || parentUser?.address || '-',
-        profilePictureUrl: externalUser?.profilePictureUrl || clubMember?.profilePictureUrl || parentUser?.profilePictureUrl || null,
+        profilePictureUrl: externalUser?.profilePictureUrl || 
+                         clubMember?.profileImage ||
+                         parentUser?.profilePictureUrl || 
+                         worker?.profilePictureUrl || 
+                         worker?.profilePicture ||
+                         userFamily?.profilePicture ||
+                         null,
         staffNo: externalUser?.staffNo || clubMember?.staffNo || parentUser?.staffNo || '-',
         hierarchicalId: externalUser?.hierarchicalId || clubMember?.hierarchicalId || parentUser?.hierarchicalId || item.hierarchicalId || '-',
         memberNo: clubMember?.memberNo || '-',
@@ -231,6 +318,13 @@ export default function CardManagementTable({
   return (
     <>
       <DataTable<CardData>
+        totalPages={totalPages}
+        rowsPerPage={pageSize}
+        onRowsPerPageChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+        serverSidePagination={true}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
@@ -254,22 +348,12 @@ export default function CardManagementTable({
       >
         {previewRow && CardComponent && (
           <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '20px' }}>
-            {/* Hidden cards for download */}
-            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-              <div ref={frontCardRef}>
-                <CardComponent data={previewRow} side="front" isDownload={true} />
-              </div>
-              <div ref={backCardRef} style={{ marginTop: '20px' }}>
-                <CardComponent data={previewRow} side="back" isDownload={true} />
-              </div>
-            </div>
-
             {/* Visible preview for screen */}
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', marginBottom: '30px' }}>
-              <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}>
+              <div className="front-card-preview" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}>
                 <CardComponent data={previewRow} side="front" />
               </div>
-              <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}>
+              <div className="back-card-preview" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}>
                 <CardComponent data={previewRow} side="back" />
               </div>
             </div>
@@ -299,7 +383,21 @@ export default function CardManagementTable({
                   fontWeight: 600,
                 }}
               >
-                {isDownloading ? 'Downloading...' : 'Download Card'}
+                {isDownloading ? `Downloading ${downloadStage === 'front' ? 'Front' : downloadStage === 'back' ? 'Back' : '...'}` : 'Download Card'}
+              </button>
+              <button
+                onClick={() => window.print()}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#3B82F6',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Print Card
               </button>
             </div>
           </div>

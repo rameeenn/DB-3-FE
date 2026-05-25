@@ -125,41 +125,45 @@ export default function BeachViewClubCard({ data, side, cardRef, isDownload = fa
         
         {/* Profile Image - centered or positioned as per design */}
         <img
-          src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
-          alt="Member"
-          crossOrigin="anonymous"
-          onError={() => setProfileImageError(true)}
-          style={{
-            position: 'absolute',
-            left: '71mm',    // X position from left edge
-            top: '35mm',     // Y position from top edge
-            transform: 'translate(-50%, -50%)',
-            width: '18mm',
-            height: '20mm',
-            objectFit: 'cover',
-            borderRadius: '2mm',
-            border: '1px solid #e2c172',
-            zIndex: 2,
-          }}
-        />
+  src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
+  alt="Member"
+  crossOrigin="anonymous"
+  onError={() => setProfileImageError(true)}
+  style={{
+    position: 'absolute',
+    left: '71mm',
+    top: '25mm',
+    transform: 'translateX(-50%)',
+    width: '18mm',
+    height: '20mm',
+    objectFit: 'cover',
+    borderRadius: '2mm',
+    border: '1px solid #e2c172',
+    zIndex: 2,
+  }}
+/>
 
-        {/* Username at bottom right */}
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '5mm', 
-          right: '11mm', 
-          zIndex: 2, 
-          ...textStyle,
-          textAlign: 'right',
-          fontSize: '2.5mm',
-          fontWeight: 500,
-          maxWidth: '50mm',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis'
-        }}>
-          {data.userName || 'Member Name'}
-        </div>
+{/* Username centered beneath the picture */}
+<div style={{ 
+  position: 'absolute', 
+  left: '71mm',
+  top: '47mm',
+  transform: 'translateX(-50%)',
+  zIndex: 2, 
+  ...textStyle,
+  textAlign: 'center',
+  fontSize: '2.5mm',
+  fontWeight: 500,
+  maxWidth: '40mm',
+  whiteSpace: 'normal',
+  lineHeight: '1.3',
+  overflow: 'hidden',
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+}}>
+  {data.userName || 'Member Name'}
+</div>
       </div>
     );
   }

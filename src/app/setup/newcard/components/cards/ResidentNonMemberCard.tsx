@@ -12,9 +12,15 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
+  const [qrCodeSrc, setQrCodeSrc] = useState<string>('');
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
+
+  const getProxiedImageUrl = (originalUrl: string | null) => {
+    if (!originalUrl) return null;
+    if (originalUrl.startsWith('/')) return originalUrl;
+    return `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`;
+  };
 
   const formatToMonthYear = (dateString: string): string => {
     if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
@@ -33,8 +39,27 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
     ? formatToMonthYear(data.cardExpiryDate)
     : '12/27';
 
-  // Log the profile picture URL for debugging
-  console.log('Profile Picture URL:', data.profilePictureUrl);
+  // Generate QR code and convert to data URL to avoid CORS issues
+  useEffect(() => {
+    const generateQRCode = async () => {
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=DHA_CARD_${data.id || 'TEST'}`;
+      
+      try {
+        const response = await fetch(qrUrl);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setQrCodeSrc(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        console.error('Failed to load QR code:', error);
+        setQrCodeSrc(qrUrl);
+      }
+    };
+    
+    generateQRCode();
+  }, [data.id]);
 
   // Preload template
   useEffect(() => {
@@ -61,35 +86,11 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
   };
 
   const getProfileImageSrc = () => {
-    console.log('getProfileImageSrc called - profileImageError:', profileImageError, 'hasUrl:', !!data.profilePictureUrl);
-    
-    // Only use default if there's no profile picture URL
-    if (!data.profilePictureUrl) {
-      console.log('No profile picture URL, using default');
+    if (!data.profilePictureUrl || profileImageError) {
       return '/card-templates/defaultprofilepic.jpg';
     }
-    
-    // If image failed to load, use default
-    if (profileImageError) {
-      console.log('Image failed to load, using default');
-      return '/card-templates/defaultprofilepic.jpg';
-    }
-    
-    // Otherwise use the direct URL
-    console.log('Using direct URL:', data.profilePictureUrl);
-    return data.profilePictureUrl;
-  };
-
-  const handleImageLoad = () => {
-    console.log('Image loaded successfully:', data.profilePictureUrl);
-    setImageLoading(false);
-    setProfileImageError(false);
-  };
-
-  const handleImageError = () => {
-    console.error('Image failed to load:', data.profilePictureUrl);
-    setImageLoading(false);
-    setProfileImageError(true);
+    const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
+    return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
   };
 
   if (!templateLoaded) {
@@ -157,29 +158,13 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
             <span>{formattedExpiryDate}</span>
           </div>
         </div>
-        {/* Profile Photo with direct URL and fallback */}
-        {data.profilePictureUrl && imageLoading && !profileImageError && (
-          <div style={{
-            position: 'absolute',
-            right: '5mm',
-            top: '27.5mm',
-            width: '18mm',
-            height: '20mm',
-            backgroundColor: '#f0f0f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '2mm',
-            zIndex: 2,
-          }}>
-            Loading...
-          </div>
-        )}
+        
+        {/* Profile Photo */}
         <img
           src={getProfileImageSrc()}
           alt="User"
-          onLoad={handleImageLoad}
-          onError={handleImageError}
+          crossOrigin="anonymous"
+          onError={() => setProfileImageError(true)}
           style={{
             position: 'absolute',
             right: '5mm',
@@ -190,7 +175,6 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
             objectFit: 'cover',
             borderRadius: '2mm',
             zIndex: 2,
-            display: (data.profilePictureUrl && imageLoading && !profileImageError) ? 'none' : 'block'
           }}
         />
       </div>
@@ -230,20 +214,25 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
           Card Template
         </div>
       )}
-      <img
-        src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=DHA_CARD_${data.id || 'TEST'}`}
-        alt="QR"
-        style={{
-          position: 'absolute',
-          left: '6.3mm',
-          top: '37mm',
-          width: '13mm',
-          height: '13mm',
-          background: '#fff',
-          padding: '1mm',
-          zIndex: 2,
-        }}
-      />
+      
+      {/* QR Code - using data URL to avoid CORS issues */}
+      {qrCodeSrc && (
+        <img
+          src={qrCodeSrc}
+          alt="QR"
+          style={{
+            position: 'absolute',
+            left: '6.3mm',
+            top: '37mm',
+            width: '13mm',
+            height: '13mm',
+            background: '#fff',
+            padding: '1mm',
+            zIndex: 2,
+          }}
+        />
+      )}
+      
       <div style={{ position: 'absolute', top: '5mm', left: '6mm', zIndex: 2, ...textStyle }}>
         <div style={{ marginBottom: '3mm' }}>
           <div style={{ marginBottom: '4mm' }}>
