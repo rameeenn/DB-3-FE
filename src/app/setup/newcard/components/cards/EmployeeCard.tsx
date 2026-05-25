@@ -183,7 +183,7 @@ const getProfileImageSrc = () => {
 
         {/* Employee Photo with default fallback */}
         <img
-          src={getProfileImageSrc()}
+          src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
           alt="Employee"
           crossOrigin="anonymous"
           onError={() => setProfileImageError(true)}

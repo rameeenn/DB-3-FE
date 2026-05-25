@@ -126,7 +126,7 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
         
         {/* Profile Image - centered or positioned as per design */}
         <img
-          src={getProfileImageSrc()}
+          src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
           alt="Member"
           crossOrigin="anonymous"
           onError={() => setProfileImageError(true)}

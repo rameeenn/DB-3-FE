@@ -14,7 +14,7 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
   const [profileImageError, setProfileImageError] = useState(false);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
-
+  const [useDirectUrl, setUseDirectUrl] = useState(true);
   const getProxiedImageUrl = (originalUrl: string | null) => {
     if (!originalUrl) return null;
     if (originalUrl.startsWith('/')) return originalUrl;
@@ -140,7 +140,7 @@ const getProfileImageSrc = () => {
         </div>
         {/* Profile Photo with default fallback */}
         <img
-          src={getProfileImageSrc()}
+          src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
           alt="User"
           crossOrigin="anonymous"
           onError={() => setProfileImageError(true)}
