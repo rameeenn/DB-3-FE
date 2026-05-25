@@ -3,10 +3,11 @@ import {
 	getInvoiceSummaryDetails,
 	type GetInvoiceSummaryDetailsParams,
 	type InvoiceSummaryDetailsResult,
+	type InvoiceSummaryTotals,
 } from "../../services/invoice.service";
 
 export function useInvoiceSummaryDetails(params: GetInvoiceSummaryDetailsParams) {
-	return useQuery<InvoiceSummaryDetailsResult>({
+	return useQuery<InvoiceSummaryDetailsResult & { totals?: InvoiceSummaryTotals }>({
 		queryKey: [
 			"invoice-summary-details",
 			params.pageNumber ?? 1,

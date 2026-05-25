@@ -4,12 +4,12 @@ import { useMemo, useState } from 'react';
 import DataTable, { Column, StatusBadge, Tab } from '@/components/tables/DataTable';
 import CircularButton from '@/components/ui/CircularButton';
 import { endOfDayIso, formatDateDisplay, startOfDayIso } from '@/lib/dateUtils';
-import { useInvoiceSummary } from '@/hooks/invoice/useInvoiceSummary';
 import { useInvoiceSummaryDetails } from '@/hooks/invoice/useInvoiceSummaryDetails';
 import type { InvoiceSummaryDetailItem } from '@/services/invoice.service';
 import { ChevronDown } from 'lucide-react';
 import { RangeDatePicker } from '@/components/date-pickers/CustomDatePickers';
 import styles from './DhaXHalconTable.module.css';
+import { InvoiceSummaryTotals } from '@/services/invoice.service';
 
 interface DhaXHalconTableProps {
   tabs: Tab[];
@@ -86,23 +86,12 @@ export default function DhaXHalconTable({ tabs, activeTab, onTabChange }: DhaXHa
   const fromDateIso = fromDate ? startOfDayIso(fromDate) : undefined;
   const toDateIso = toDate ? endOfDayIso(toDate) : undefined;
 
+  // Get data for the table (with date filters)
   const {
-    data: summaryTotals,
-    isLoading: summaryLoading,
-    isError: summaryError,
-    error: summaryErr,
-  } = useInvoiceSummary({
-    pageNumber: 1,
-    pageSize: 5,
-    fromDate: fromDateIso,
-    toDate: toDateIso,
-  });
-
-  const {
-    data: detailsData,
-    isLoading: detailsLoading,
-    isError: detailsError,
-    error: detailsErr,
+    data: summaryDetails,
+    isLoading,
+    isError,
+    error,
   } = useInvoiceSummaryDetails({
     pageNumber: currentPage,
     pageSize,
@@ -110,11 +99,25 @@ export default function DhaXHalconTable({ tabs, activeTab, onTabChange }: DhaXHa
     toDate: toDateIso,
   });
 
-  const dhaPct = summaryTotals?.dhaPercentage ?? 0;
-  const halconPct = summaryTotals?.halconPercentage ?? 0;
+  // Get totals without date filters for the header summary
+  const { data: totalsData } = useInvoiceSummaryDetails({
+    pageNumber: 1,
+    pageSize: 1,
+    fromDate: undefined,
+    toDate: undefined,
+  });
 
+  // Use totals from the unfiltered API call for the header
+  const totals = totalsData?.totals;
+  const dhaPct = totals?.dhaPercentage ?? 0;
+  const halconPct = totals?.halconPercentage ?? 0;
+  const totalAmount = totals?.totalAmount ?? 0;
+  const dhaAmount = totals?.dhaAmount ?? 0;
+  const halconAmount = totals?.halconAmount ?? 0;
+
+  // For table rows, use the percentages from totals to calculate shares
   const tableRows: HalconRow[] = useMemo(() => {
-    const items: InvoiceSummaryDetailItem[] = detailsData?.items ?? [];
+    const items: InvoiceSummaryDetailItem[] = summaryDetails?.items ?? [];
     return items.map((item) => {
       const total = Number(item.totalAmount) || 0;
       const dhaPart = (total * dhaPct) / 100;
@@ -141,21 +144,23 @@ export default function DhaXHalconTable({ tabs, activeTab, onTabChange }: DhaXHa
         trialDueDate: item.trialDueDate || '-',
       };
     });
-  }, [detailsData?.items, dhaPct, halconPct]);
+  }, [summaryDetails?.items, dhaPct, halconPct]);
 
-  const totalListPages = Math.max(1, detailsData?.totalPages ?? 1);
-  const isLoading = summaryLoading || detailsLoading;
-  const isError = detailsError || summaryError;
-  const error = detailsErr ?? summaryErr;
+  const totalListPages = Math.max(1, summaryDetails?.totalPages ?? 1);
 
-  const excelDateRangeIso = () => {
-    const toYmd = toDate.trim() || new Date().toISOString().slice(0, 10);
-    const fromYmd = fromDate.trim() || toYmd;
-    return {
-      from: startOfDayIso(fromYmd)!,
-      to: endOfDayIso(toYmd)!,
-    };
-  };
+  const filteredRows = useMemo(() => {
+    if (selectedHead === 'all') return tableRows;
+    if (selectedHead === 'dha') {
+      return tableRows.filter(row => {
+        const dhaValue = parseFloat(row.dhaShare.replace(/[^0-9.-]/g, ''));
+        return dhaValue > 0;
+      });
+    }
+    return tableRows.filter(row => {
+      const halconValue = parseFloat(row.halconShare.replace(/[^0-9.-]/g, ''));
+      return halconValue > 0;
+    });
+  }, [tableRows, selectedHead]);
 
   const headerContent = (
     <div className={styles.headerArea}>
@@ -196,17 +201,17 @@ export default function DhaXHalconTable({ tabs, activeTab, onTabChange }: DhaXHa
         <div className={styles.rightGroup}>
           <div className={styles.card}>
             <p className={styles.cardLabel}>Total Amount</p>
-            <p className={styles.cardValue}>{formatPkr(summaryTotals?.totalAmount)}</p>
+            <p className={styles.cardValue}>{formatPkr(totalAmount)}</p>
           </div>
           <div className={styles.card}>
             <p className={styles.cardLabel}>DHA %</p>
-            <p className={styles.cardSub}>{summaryTotals != null ? `${summaryTotals.dhaPercentage}%` : '—'}</p>
-            <p className={styles.cardValue}>{formatPkr(summaryTotals?.dhaAmount)}</p>
+            <p className={styles.cardSub}>{dhaPct}%</p>
+            <p className={styles.cardValue}>{formatPkr(dhaAmount)}</p>
           </div>
           <div className={styles.card}>
             <p className={styles.cardLabel}>Halcon %</p>
-            <p className={styles.cardSub}>{summaryTotals != null ? `${summaryTotals.halconPercentage}%` : '—'}</p>
-            <p className={styles.cardValue}>{formatPkr(summaryTotals?.halconAmount)}</p>
+            <p className={styles.cardSub}>{halconPct}%</p>
+            <p className={styles.cardValue}>{formatPkr(halconAmount)}</p>
           </div>
         </div>
       </div>
@@ -219,7 +224,7 @@ export default function DhaXHalconTable({ tabs, activeTab, onTabChange }: DhaXHa
       activeTab={activeTab}
       onTabChange={onTabChange}
       columns={columns}
-      data={tableRows}
+      data={filteredRows}
       showAddButton={false}
       loading={isLoading}
       currentPage={currentPage}

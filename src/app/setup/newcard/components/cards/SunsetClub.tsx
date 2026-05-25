@@ -11,14 +11,9 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
-
-  const getProxiedImageUrl = (originalUrl: string | null) => {
-    if (!originalUrl) return null;
-    if (originalUrl.startsWith('/')) return originalUrl;
-    return `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`;
-  };
 
   const formatToMonthYear = (dateString: string): string => {
     if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
@@ -36,6 +31,9 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
   const formattedExpiryDate = data.cardExpiryDate !== '-'
     ? formatToMonthYear(data.cardExpiryDate)
     : '12/27';
+
+  // Log the profile picture URL for debugging
+  console.log('Sunset Club Card - Profile Picture URL:', data.profilePictureUrl);
 
   // Preload template
   useEffect(() => {
@@ -61,17 +59,37 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
     fontFamily: 'Arial, sans-serif',
   };
 
-  // Get the profile image source (with fallback to default)
   const getProfileImageSrc = () => {
-  // Only use default if there's no profile picture URL or if image failed to load
-  if (!data.profilePictureUrl || profileImageError) {
-    return '/card-templates/defaultprofilepic.jpg';
-  }
-  
-  // Otherwise use the proxied image URL
-  const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
-  return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
-};
+    console.log('getProfileImageSrc called - profileImageError:', profileImageError, 'hasUrl:', !!data.profilePictureUrl);
+    
+    // Only use default if there's no profile picture URL
+    if (!data.profilePictureUrl) {
+      console.log('No profile picture URL, using default');
+      return '/card-templates/defaultprofilepic.jpg';
+    }
+    
+    // If image failed to load, use default
+    if (profileImageError) {
+      console.log('Image failed to load, using default');
+      return '/card-templates/defaultprofilepic.jpg';
+    }
+    
+    // Otherwise use the direct URL
+    console.log('Using direct URL:', data.profilePictureUrl);
+    return data.profilePictureUrl;
+  };
+
+  const handleImageLoad = () => {
+    console.log('Sunset Club image loaded successfully:', data.profilePictureUrl);
+    setImageLoading(false);
+    setProfileImageError(false);
+  };
+
+  const handleImageError = () => {
+    console.error('Sunset Club image failed to load:', data.profilePictureUrl);
+    setImageLoading(false);
+    setProfileImageError(true);
+  };
 
   if (!templateLoaded) {
     return (
@@ -119,20 +137,42 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
             justifyContent: 'center',
             color: '#e2c172'
           }}>
-            Creek Club Card Template
+            Sunset Club Card Template
           </div>
         )}
         
-        {/* Profile Image - centered or positioned as per design */}
+        {/* Loading placeholder */}
+        {data.profilePictureUrl && imageLoading && !profileImageError && (
+          <div style={{
+            position: 'absolute',
+            left: '71mm',
+            top: '35mm',
+            transform: 'translate(-50%, -50%)',
+            width: '18mm',
+            height: '20mm',
+            backgroundColor: '#f0f0f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '2mm',
+            zIndex: 2,
+            fontSize: '2mm',
+            color: '#666'
+          }}>
+            Loading...
+          </div>
+        )}
+        
+        {/* Profile Image */}
         <img
-          src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
+          src={getProfileImageSrc()}
           alt="Member"
-          crossOrigin="anonymous"
-          onError={() => setProfileImageError(true)}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
           style={{
             position: 'absolute',
-            left: '71mm',    // X position from left edge
-            top: '35mm',     // Y position from top edge
+            left: '71mm',
+            top: '35mm',
             transform: 'translate(-50%, -50%)',
             width: '18mm',
             height: '20mm',
@@ -140,6 +180,7 @@ export default function SunsetClubCard({ data, side, cardRef, isDownload = false
             borderRadius: '2mm',
             border: '1px solid #e2c172',
             zIndex: 2,
+            display: (data.profilePictureUrl && imageLoading && !profileImageError) ? 'none' : 'block'
           }}
         />
 

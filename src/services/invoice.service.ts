@@ -191,6 +191,7 @@ export interface InvoiceSummaryDetailsResult {
 	pageNumber: number;
 	pageSize: number;
 	totalPages: number;
+	totals?: InvoiceSummaryTotals; // ← ADD THIS LINE to include totals in the result
 }
 
 export interface GetInvoiceSummaryParams {
@@ -229,47 +230,49 @@ export async function getInvoiceSummary(params: GetInvoiceSummaryParams): Promis
 }
 
 export async function getInvoiceSummaryDetails(
-	params: GetInvoiceSummaryDetailsParams
-): Promise<InvoiceSummaryDetailsResult> {
-	const pageNumber = params.pageNumber ?? 1;
-	const pageSize = params.pageSize ?? 10;
-	const query: Record<string, string | number> = {
-		PageNumber: pageNumber,
-		PageSize: pageSize,
-	};
-	if (params.fromDate?.trim()) query.FromDate = params.fromDate.trim();
-	if (params.toDate?.trim()) query.ToDate = params.toDate.trim();
+  params: GetInvoiceSummaryDetailsParams
+): Promise<InvoiceSummaryDetailsResult & { totals?: InvoiceSummaryTotals }> {
+  const pageNumber = params.pageNumber ?? 1;
+  const pageSize = params.pageSize ?? 10;
+  const query: Record<string, string | number> = {
+    PageNumber: pageNumber,
+    PageSize: pageSize,
+  };
+  if (params.fromDate?.trim()) query.FromDate = params.fromDate.trim();
+  if (params.toDate?.trim()) query.ToDate = params.toDate.trim();
 
-	const response = await apiClient.get<{
-		statusCode: number;
-		successMessage: string;
-		errorMessage: string | null;
-		data?: {
-			totals?: InvoiceSummaryTotals;
-			items?: InvoiceSummaryDetailItem[];
-			totalCount?: number;
-			pageNumber?: number;
-			pageSize?: number;
-			totalPages?: number;
-		};
-	}>("/invoices/summary/details", { params: query });
+  const response = await apiClient.get<{
+    statusCode: number;
+    successMessage: string;
+    errorMessage: string | null;
+    data?: {
+      totals?: InvoiceSummaryTotals;
+      items?: InvoiceSummaryDetailItem[];
+      totalCount?: number;
+      pageNumber?: number;
+      pageSize?: number;
+      totalPages?: number;
+    };
+  }>("/invoices/summary/details", { params: query });
 
-	const d = response.data?.data;
-	if (!d) {
-		return {
-			items: [],
-			totalCount: 0,
-			pageNumber,
-			pageSize,
-			totalPages: 1,
-		};
-	}
+  const d = response.data?.data;
+  if (!d) {
+    return {
+      items: [],
+      totalCount: 0,
+      pageNumber,
+      pageSize,
+      totalPages: 1,
+    };
+  }
 
-	return {
-		items: Array.isArray(d.items) ? d.items : [],
-		totalCount: d.totalCount ?? 0,
-		pageNumber: d.pageNumber ?? pageNumber,
-		pageSize: d.pageSize ?? pageSize,
-		totalPages: Math.max(1, d.totalPages ?? 1),
-	};
+  return {
+    items: Array.isArray(d.items) ? d.items : [],
+    totalCount: d.totalCount ?? 0,
+    pageNumber: d.pageNumber ?? pageNumber,
+    pageSize: d.pageSize ?? pageSize,
+    totalPages: Math.max(1, d.totalPages ?? 1),
+    totals: d.totals, // ← ADD THIS LINE to return totals
+  };
+  
 }
