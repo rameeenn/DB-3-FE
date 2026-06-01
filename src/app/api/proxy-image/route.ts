@@ -1,6 +1,36 @@
 // app/api/proxy-image/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
+const DEFAULT_ALLOWED_HOSTS = [
+  'gwp.dhakarachi.org',
+  'dfpwebp.dhakarachi.org',
+  'sdga-apistagging.dhakarachi.org',
+  'dhakarachi.org',
+];
+
+function getAllowedHostnames(): Set<string> {
+  const hosts = new Set(DEFAULT_ALLOWED_HOSTS);
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (apiUrl) {
+    try {
+      hosts.add(new URL(apiUrl).hostname);
+    } catch {
+      // ignore invalid env
+    }
+  }
+
+  const extra = process.env.NEXT_PUBLIC_MEDIA_ALLOWED_HOSTS?.trim();
+  if (extra) {
+    for (const part of extra.split(',')) {
+      const host = part.trim();
+      if (host) hosts.add(host);
+    }
+  }
+
+  return hosts;
+}
+
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url');
   
@@ -13,9 +43,9 @@ export async function GET(request: NextRequest) {
   try {
     // Validate URL to prevent malicious requests
     const urlObj = new URL(url);
-    const allowedDomains = ['gwp.dhakarachi.org', 'dfpwebp.dhakarachi.org', 'sdga-apistagging.dhakarachi.org'];
+    const allowedDomains = getAllowedHostnames();
     
-    if (!allowedDomains.some(domain => urlObj.hostname === domain)) {
+    if (!allowedDomains.has(urlObj.hostname)) {
       console.error('[proxy-image] Blocked domain:', urlObj.hostname);
       return new NextResponse('Domain not allowed', { status: 403 });
     }

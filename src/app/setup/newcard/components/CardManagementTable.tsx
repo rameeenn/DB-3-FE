@@ -24,6 +24,7 @@ import CountryGolfClubCard from './cards/CountryGolfClub';
 import StaffMemberCard from './cards/StaffMemberCard';
 
 import { CardData } from './cards/types';
+import { getProxiedCardImageUrl } from '../../../../lib/cardImageUrl';
 
 interface Props {
   tabs: Tab[];
@@ -116,13 +117,12 @@ export default function CardManagementTable({
 
   // Handle preview - use cached base64 if available
   const handlePreview = (row: CardData) => {
-    const cachedImage = row.profilePictureUrl 
-      ? imageCache.current.get(row.profilePictureUrl) 
-      : null;
-    
+    const cacheKey = row.profilePictureUrl ?? '';
+    const cachedImage = cacheKey ? imageCache.current.get(cacheKey) : null;
+
     setPreviewRow({
       ...row,
-      profilePictureUrl: cachedImage || row.profilePictureUrl,
+      profilePictureUrl: cachedImage || getProxiedCardImageUrl(row.profilePictureUrl),
     });
     setPreviewOpen(true);
   };
@@ -199,13 +199,15 @@ export default function CardManagementTable({
         cardIssueDate: formatFullDate(externalUser?.cardIssueDate || parentUser?.cardIssueDate || clubMember?.validFrom || item.validFrom),
         cardExpiryDate: formatFullDate(externalUser?.cardExpiryDate || parentUser?.cardExpiryDate || clubMember?.validTo || item.validTo),
         address: externalUser?.address || parentUser?.address || '-',
-        profilePictureUrl: externalUser?.profilePictureUrl || 
-                         clubMember?.profileImage ||
-                         parentUser?.profilePictureUrl || 
-                         worker?.profilePictureUrl || 
-                         worker?.profilePicture ||
-                         userFamily?.profilePicture ||
-                         null,
+        profilePictureUrl: getProxiedCardImageUrl(
+          externalUser?.profilePictureUrl ||
+            clubMember?.profileImage ||
+            parentUser?.profilePictureUrl ||
+            worker?.profilePictureUrl ||
+            worker?.profilePicture ||
+            userFamily?.profilePicture ||
+            null
+        ),
         staffNo: externalUser?.staffNo || clubMember?.staffNo || parentUser?.staffNo || '-',
         hierarchicalId: externalUser?.hierarchicalId || clubMember?.hierarchicalId || parentUser?.hierarchicalId || item.hierarchicalId || '-',
         memberNo: clubMember?.memberNo || '-',
@@ -217,15 +219,15 @@ export default function CardManagementTable({
     { 
       key: 'profilePictureUrl', 
       header: 'Profile', 
-      render: (value) => value ? (
+      render: (value) => (
         <img 
-          src={value} 
+          src={String(value || getProxiedCardImageUrl(null))}
           alt="Profile" 
-          style={{ width: 32, height: 32, borderRadius: '50%' }} 
-          onLoad={(e) => handleImageLoad(value, e.currentTarget)}
+          style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} 
+          onLoad={(e) => handleImageLoad(String(value), e.currentTarget)}
           crossOrigin="anonymous"
         />
-      ) : '-' 
+      )
     },
     { key: 'userName', header: 'User Name' },
     { key: 'cnic', header: 'CNIC' },

@@ -1,11 +1,23 @@
-/** Use absolute media URLs from the API; prefix known host for relative paths. */
+function getApiMediaOrigin(): string {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (apiUrl) {
+    try {
+      return new URL(apiUrl).origin;
+    } catch {
+      // fall through
+    }
+  }
+  return "https://sdga-apistagging.dhakarachi.org";
+}
+
+/** Use absolute media URLs from the API; prefix API origin for relative paths. */
 export function resolvePublicMediaUrl(url: string | null | undefined): string {
   const s = String(url ?? "").trim();
   if (!s) return "";
   if (/^https?:\/\//i.test(s)) return s;
   if (s.startsWith("//")) return `https:${s}`;
   const path = s.startsWith("/") ? s : `/${s}`;
-  return `https://sdga-apistagging.dhakarachi.org${path}`;
+  return `${getApiMediaOrigin()}${path}`;
 }
 
 /** Heuristic: image extensions, or https URLs unless they look like common non-image documents. */

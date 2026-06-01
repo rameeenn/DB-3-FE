@@ -3,6 +3,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { CardData, CardComponentProps } from './types';
+import { getProxiedCardImageUrl, DEFAULT_CARD_PROFILE_IMAGE } from '@/lib/cardImageUrl';
 
 interface CreekClubCardProps extends CardComponentProps {
   side: 'front' | 'back';
@@ -14,12 +15,6 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
   const [profileImageError, setProfileImageError] = useState(false);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
-
-  const getProxiedImageUrl = (originalUrl: string | null) => {
-    if (!originalUrl) return null;
-    if (originalUrl.startsWith('/')) return originalUrl;
-    return `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`;
-  };
 
   const formatToMonthYear = (dateString: string): string => {
     if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
@@ -64,14 +59,9 @@ export default function CreekClubCard({ data, side, cardRef, isDownload = false 
 
   // Get the profile image source (with fallback to default)
   const getProfileImageSrc = () => {
-  // Only use default if there's no profile picture URL or if image failed to load
-  if (!data.profilePictureUrl || profileImageError) {
-    return '/card-templates/defaultprofilepic.jpg';
-  }
-  
-  // Use direct URL instead of proxy
-  return data.profilePictureUrl;
-};
+    if (profileImageError) return DEFAULT_CARD_PROFILE_IMAGE;
+    return getProxiedCardImageUrl(data.profilePictureUrl);
+  };
 
   if (!templateLoaded) {
     return (

@@ -225,6 +225,16 @@ const CustomConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confir
   if (!/^\d{16}$/.test(tagNumber)) {
     throw new Error('Tag Number must be exactly 16 digits');
   }
+  const formatDate = (dateString: string): string => {
+    if (!dateString) {
+      // Default to current date
+      const date = new Date();
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T00:00:00.000Z`;
+    }
+    const date = new Date(dateString);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T00:00:00.000Z`;
+  };
+
     const payload: any = {
       tagApprovalRequestId: selectedTag.id,
       entityName: selectedTag.subjectName,

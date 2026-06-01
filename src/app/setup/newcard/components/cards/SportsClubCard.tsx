@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { CardData, CardComponentProps } from './types';
+import { getProxiedCardImageUrl, DEFAULT_CARD_PROFILE_IMAGE } from '@/lib/cardImageUrl';
 
 interface SportsClubCardProps extends CardComponentProps {
   side: 'front' | 'back';
@@ -60,23 +61,8 @@ export default function SportsClubCard({ data, side, cardRef, isDownload = false
   };
 
   const getProfileImageSrc = () => {
-    console.log('getProfileImageSrc called - profileImageError:', profileImageError, 'hasUrl:', !!data.profilePictureUrl);
-    
-    // Only use default if there's no profile picture URL
-    if (!data.profilePictureUrl) {
-      console.log('No profile picture URL, using default');
-      return '/card-templates/defaultprofilepic.jpg';
-    }
-    
-    // If image failed to load, use default
-    if (profileImageError) {
-      console.log('Image failed to load, using default');
-      return '/card-templates/defaultprofilepic.jpg';
-    }
-    
-    // Otherwise use the direct URL
-    console.log('Using direct URL:', data.profilePictureUrl);
-    return data.profilePictureUrl;
+    if (profileImageError) return DEFAULT_CARD_PROFILE_IMAGE;
+    return getProxiedCardImageUrl(data.profilePictureUrl);
   };
 
   const handleImageLoad = () => {

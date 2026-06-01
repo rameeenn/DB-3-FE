@@ -3,6 +3,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { CardData, CardComponentProps } from './types';
+import { getProxiedCardImageUrl, DEFAULT_CARD_PROFILE_IMAGE } from '@/lib/cardImageUrl';
 
 interface ResidentNonMemberCardProps extends CardComponentProps {
   side: 'front' | 'back';
@@ -15,12 +16,6 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
   const [qrCodeSrc, setQrCodeSrc] = useState<string>('');
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
-
-  const getProxiedImageUrl = (originalUrl: string | null) => {
-    if (!originalUrl) return null;
-    if (originalUrl.startsWith('/')) return originalUrl;
-    return `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`;
-  };
 
   const formatToMonthYear = (dateString: string): string => {
     if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
@@ -86,11 +81,8 @@ export default function ResidentNonMemberCard({ data, side, cardRef, isDownload 
   };
 
   const getProfileImageSrc = () => {
-    if (!data.profilePictureUrl || profileImageError) {
-      return '/card-templates/defaultprofilepic.jpg';
-    }
-    const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
-    return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
+    if (profileImageError) return DEFAULT_CARD_PROFILE_IMAGE;
+    return getProxiedCardImageUrl(data.profilePictureUrl);
   };
 
   if (!templateLoaded) {

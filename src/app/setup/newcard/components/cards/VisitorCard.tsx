@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { CardData, CardComponentProps } from './types';
+import { getProxiedCardImageUrl, DEFAULT_CARD_PROFILE_IMAGE } from '@/lib/cardImageUrl';
 
 interface VisitorCardProps extends CardComponentProps {
   side: 'front' | 'back';
@@ -13,13 +14,6 @@ export default function VisitorCard({ data, side, cardRef, isDownload = false }:
   const [profileImageError, setProfileImageError] = useState(false);
   const localRef = useRef<HTMLDivElement>(null);
   const ref = cardRef || localRef;
-  const [useDirectUrl, setUseDirectUrl] = useState(true);
-  const getProxiedImageUrl = (originalUrl: string | null) => {
-    if (!originalUrl) return null;
-    if (originalUrl.startsWith('/')) return originalUrl;
-    return `/api/proxy-image?url=${encodeURIComponent(originalUrl)}`;
-  };
-
   const formatToMonthYear = (dateString: string): string => {
     if (!dateString || dateString === '0001-01-01T00:00:00') return '-';
     const date = new Date(dateString);
@@ -61,16 +55,10 @@ export default function VisitorCard({ data, side, cardRef, isDownload = false }:
     fontFamily: 'Arial, sans-serif',
   };
 
-const getProfileImageSrc = () => {
-  // Only use default if there's no profile picture URL or if image failed to load
-  if (!data.profilePictureUrl || profileImageError) {
-    return '/card-templates/defaultprofilepic.jpg';
-  }
-  
-  // Otherwise use the proxied image URL
-  const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
-  return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
-};
+  const getProfileImageSrc = () => {
+    if (profileImageError) return DEFAULT_CARD_PROFILE_IMAGE;
+    return getProxiedCardImageUrl(data.profilePictureUrl);
+  };
 
   if (!templateLoaded) {
     return (
@@ -139,7 +127,7 @@ const getProfileImageSrc = () => {
         </div>
         {/* Profile Photo with default fallback */}
         <img
-          src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
+          src={getProfileImageSrc()}
           alt="User"
           crossOrigin="anonymous"
           onError={() => setProfileImageError(true)}
