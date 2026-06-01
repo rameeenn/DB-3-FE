@@ -221,12 +221,15 @@ const CustomConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confir
     if (!selectedTag) return;
     
     const tagTypeId = getTagTypeId(selectedTag.tagType);
-    
+    const tagNumber = formData.tagNumber?.trim() || '';
+  if (!/^\d{16}$/.test(tagNumber)) {
+    throw new Error('Tag Number must be exactly 16 digits');
+  }
     const payload: any = {
       tagApprovalRequestId: selectedTag.id,
       entityName: selectedTag.subjectName,
       entityId: selectedTag.subjectId,
-      tagNumber: formData.tagNumber || selectedTag.tagNumber,
+      tagNumber: tagNumber,
       tagTypeId: tagTypeId,
       validFrom: new Date().toISOString(),
       validTo: new Date().toISOString(),
@@ -255,6 +258,16 @@ const CustomConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confir
 
   // Modal fields for RFID/UHF
   const approveFields: ProfileField[] = [
+    { name: 'tagApprovalRequestId' as keyof ProfileFormData, label: 'Tag Approval Request ID', type: 'text', required: true, readOnly: true },
+    { name: 'name' as keyof ProfileFormData, label: 'Entity Name', type: 'text', required: true, readOnly: true },
+    { name: 'entityId' as keyof ProfileFormData, label: 'Entity ID', type: 'text', required: true, readOnly: true },
+    {
+    name: 'tagType' as keyof ProfileFormData,
+    label: 'Tag Type',
+    type: 'text',
+    required: true,
+    readOnly: true,
+    },
     { 
       name: 'tagNumber', 
       label: 'Tag Number', 
@@ -278,6 +291,8 @@ const CustomConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confir
       placeholder: 'Select Plan Type',
       options: planTypeOptions,
     },
+    { name: 'validFrom' as keyof ProfileFormData, label: 'Valid From', type: 'date', required: true, placeholder: 'Select Date'},
+    { name: 'validTo' as keyof ProfileFormData, label: 'Valid To', type: 'date', required: true, placeholder: 'Select Date'},
     {
       name: 'trialPeriod',
       label: 'Trial Period',
@@ -453,10 +468,16 @@ const CustomConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confir
           fields={approveFields}
           saveButtonText="Approve"
           initialValues={{
+            tagApprovalRequestId: selectedTag?.id || '',           // Pick from selected tag
+            name: selectedTag?.subjectName || '',                  // Pick from selected tag
+            entityId: selectedTag?.subjectId || '',                // Pick from selected tag
+            tagType: selectedTag?.tagType || '',                   // Pick from selected tag
             tagNumber: selectedTag?.tagNumber || '',
             feeScaleId: '',
             planType: '',
             trialPeriod: 'Unknown',
+            validFrom: '',  // Add this
+            validTo: '',    // Add this
           }}
           loading={isApprovePending}
           successTitle="Tag Approved"
