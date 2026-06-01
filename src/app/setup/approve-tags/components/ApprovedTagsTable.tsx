@@ -217,48 +217,70 @@ const CustomConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confir
   };
 
   // Handle Approve from modal
-  const handleApproveSubmit = async (formData: ProfileFormData) => {
-    if (!selectedTag) return;
-    
-    const tagTypeId = getTagTypeId(selectedTag.tagType);
-    const tagNumber = formData.tagNumber?.trim() || '';
+  // Handle Approve from modal
+const handleApproveSubmit = async (formData: ProfileFormData) => {
+  if (!selectedTag) return;
+  
+  const tagTypeId = getTagTypeId(selectedTag.tagType);
+  const tagNumber = formData.tagNumber?.trim() || '';
+  
   if (!/^\d{16}$/.test(tagNumber)) {
     throw new Error('Tag Number must be exactly 16 digits');
   }
-  const formatDate = (dateString: string): string => {
-    if (!dateString) {
-      // Default to current date
-      const date = new Date();
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T00:00:00.000Z`;
-    }
-    const date = new Date(dateString);
+  
+  // Helper function to format date as YYYY-MM-DDT00:00:00.000Z
+  const formatDate = (date: Date): string => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T00:00:00.000Z`;
   };
-
-    const payload: any = {
-      tagApprovalRequestId: selectedTag.id,
-      entityName: selectedTag.subjectName,
-      entityId: selectedTag.subjectId,
-      tagNumber: tagNumber,
-      tagTypeId: tagTypeId,
-      validFrom: new Date().toISOString(),
-      validTo: new Date().toISOString(),
-      planType: formData.planType || 'unknown',
-      status: 0,
-      feeScaleId: formData.feeScaleId,
-      trialPeriod: formData.trialPeriod || 'Unknown',
-    };
-
-    try {
-      await approveTag(payload);
-      setApproveModalOpen(false);
-      setSelectedTag(null);
-      refetch();
-    } catch (error) {
-      console.error('Approval failed:', error);
-      throw error;
-    }
+  
+  // Set validFrom date
+  let validFromDate = new Date();
+  if (formData.validFrom) {
+    validFromDate = new Date(formData.validFrom);
+  }
+  const validFrom = formatDate(validFromDate);
+  
+  // Set validTo date - 3 years from validFrom
+  let validToDate = new Date(validFromDate);
+  if (formData.validTo) {
+    validToDate = new Date(formData.validTo);
+  } else {
+    // Default to 3 years ahead
+    validToDate.setFullYear(validToDate.getFullYear() + 3);
+  }
+  const validTo = formatDate(validToDate);
+  
+  // Build payload - only include feeScaleId if it has a value
+  const payload: any = {
+    tagApprovalRequestId: selectedTag.id,
+    entityName: selectedTag.subjectName,
+    entityId: selectedTag.subjectId,
+    tagNumber: tagNumber,
+    tagTypeId: tagTypeId,
+    validFrom: validFrom,
+    validTo: validTo,
+    planType: formData.planType || 'unknown',
+    status: 0,
+    trialPeriod: formData.trialPeriod || 'Unknown',
   };
+  
+  // Only add feeScaleId if it's provided and not empty
+  if (formData.feeScaleId && formData.feeScaleId.trim() !== '') {
+    payload.feeScaleId = formData.feeScaleId;
+  }
+  
+  console.log('Sending payload:', JSON.stringify(payload, null, 2));
+  
+  try {
+    await approveTag(payload);
+    setApproveModalOpen(false);
+    setSelectedTag(null);
+    refetch();
+  } catch (error) {
+    console.error('Approval failed:', error);
+    throw error;
+  }
+};
 
   // Fee scale options
   const feeScaleOptions = [

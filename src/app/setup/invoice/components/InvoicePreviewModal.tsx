@@ -14,6 +14,7 @@ interface InvoicePreviewData {
   taxAmount: number;
   discountAmount: number;
   totalAmount: number;
+  totalAmountAfterDueDate?: number;  // This is the field from API
   serviceType: string | null;
 }
 
@@ -88,7 +89,8 @@ export default function InvoicePreviewModal({ isOpen, onClose, invoice }: Invoic
   const lineAmount = Number(invoice.amount || 0);
   const taxAmount = Number(invoice.taxAmount || 0);
   const discountAmount = Number(invoice.discountAmount || 0);
-  const totalPay = Number(invoice.totalAmount ?? 0);
+  const totalPayBeforeDate = Number(invoice.totalAmount ?? 0);
+  const totalPayAfterDate = Number(invoice.totalAmountAfterDueDate ?? 0);
 
   const downloadPdf = () => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -155,7 +157,8 @@ export default function InvoicePreviewModal({ isOpen, onClose, invoice }: Invoic
       ['Amount', currency(lineAmount)],
       ['Tax Amount', currency(taxAmount)],
       ['Discount Amount', currency(discountAmount)],
-      ['Total Pay', currency(totalPay)],
+      ['Total Pay Before Due Date', currency(totalPayBeforeDate)],
+      ['Total Pay After Due Date', currency(totalPayAfterDate)],
     ].forEach(([label, value]) => {
       doc.text(label, right - 160, y);
       doc.text(value, right, y, { align: 'right' });
@@ -247,8 +250,12 @@ export default function InvoicePreviewModal({ isOpen, onClose, invoice }: Invoic
                     <td className={styles.totalsValue}>{currency(discountAmount)}</td>
                   </tr>
                   <tr>
-                    <td className={styles.totalsLabel}>Total Pay</td>
-                    <td className={styles.totalsValue}>{currency(totalPay)}</td>
+                    <td className={styles.totalsLabel}>Total Pay Before Due Date</td>
+                    <td className={styles.totalsValue}>{currency(totalPayBeforeDate)}</td>
+                  </tr>
+                  <tr>
+                    <td className={styles.totalsLabel}>Total Pay After Due Date</td>
+                    <td className={styles.totalsValue}>{currency(totalPayAfterDate)}</td>
                   </tr>
                 </tbody>
               </table>

@@ -19,6 +19,7 @@ export interface InvoiceRecord {
 	mdrAmount?: number | null;
 	fedTaxAmount?: number | null;
 	totalAmount: number;
+	totalAmountAfterDueDate?: number | null;
 	status: string;
 	invoiceStatus?: string | null;
 	paidAt: string | null;
@@ -106,6 +107,7 @@ export interface CreateInvoicePayload {
 	amount?: number;
 	taxAmount?: number;
 	totalAmount?: number;
+	totalAmountAfterDueDate?: number;
 	createdBy?: string;
 }
 
@@ -126,6 +128,7 @@ export interface UpdateInvoicePayload {
 	amount?: number;
 	taxAmount?: number;
 	totalAmount?: number;
+	totalAmountAfterDueDate?: number;
 }
 
 export async function updateInvoice(payload: UpdateInvoicePayload): Promise<RemoveInvoiceResponse> {
