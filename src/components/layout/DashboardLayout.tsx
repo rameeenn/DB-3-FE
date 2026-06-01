@@ -253,6 +253,13 @@ export default function DashboardLayout({
                 <span className={styles.menuItemText}>DHA x Halcon</span>  
                 <img src={getMenuIcon('/dha-x-halcon', (activeMenuItem === '/dha-x-halcon' || activeMenuItem.startsWith('/dha-x-halcon/')))} alt="" className={styles.menuIconImg} />
               </Link>
+              <Link 
+                href="/invoice"
+                className={`${(activeMenuItem === '/invoice' || activeMenuItem.startsWith('/invoice/')) ? styles.menuItemActive : ''} ${styles.menuItem}`}
+              >
+                <span className={styles.menuItemText}>Invoice</span>  
+                <img src={getMenuIcon('/invoice', (activeMenuItem === '/invoice' || activeMenuItem.startsWith('/invoice/')))} alt="" className={styles.menuIconImg} />
+              </Link>
               </>
           )}
           {sidebarOpen && <div className={styles.menuSeparator} />}

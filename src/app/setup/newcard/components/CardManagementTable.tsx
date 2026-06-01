@@ -282,6 +282,7 @@ export default function CardManagementTable({
         userTypeOptions={userTypeOptions}
         selectedUserType={selectedUserType}
         onUserTypeChange={setSelectedUserType}
+        
       />
 
       <FormModal
@@ -290,7 +291,7 @@ export default function CardManagementTable({
         title="Card Preview"
       >
         {previewRow && CardComponent && (
-          <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '20px' }}>
+          <div style={{ maxHeight: '70vh', overflowY: 'auto', padding: '20px'}}>
             {/* Visible preview for screen */}
             <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', marginBottom: '30px' }}>
               <div className="front-card-preview" style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,0.18)' }}>

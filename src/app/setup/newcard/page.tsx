@@ -11,6 +11,7 @@ export default function NewCardPage() {
 
   return (
     <DashboardLayout pageTitle="Card Management" showBackButton={false}>
+      <div style={{ padding: '20px' }}>
       <CardManagementTable
         tabs={tabs}
         activeTab={activeTab}
@@ -19,6 +20,7 @@ export default function NewCardPage() {
         addButtonLabel={addButtonLabel}
         searchParams={searchParams}
       />
+      </div>
     </DashboardLayout>
   );
 }

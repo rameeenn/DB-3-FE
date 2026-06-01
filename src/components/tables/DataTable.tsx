@@ -864,7 +864,6 @@ const renderFooter = () => {
         {tableUpperContent}
         {renderTable()}
       </div>
-
       {renderFooter()}
     </div>
   );

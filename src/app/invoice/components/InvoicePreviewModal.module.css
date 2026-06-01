@@ -1,0 +1,241 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 24px;
+}
+
+.modal {
+  width: min(900px, 100%);
+  max-height: 92vh;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #ebeff2;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.downloadButton {
+  border: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.closeButton {
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #4b5563;
+  height: 36px;
+  width: 36px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.content {
+  overflow: auto;
+  padding: 18px;
+  background: #f7f8fb;
+}
+
+.invoiceSheet {
+  background: #fff;
+  border: 1px solid #edf1f5;
+  border-radius: 10px;
+  padding: 24px 28px 18px;
+}
+
+.topRow {
+  display: grid;
+  grid-template-columns: 90px minmax(260px, 1fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.logoBlock {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.logoPlaceholder {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 2px solid #1f7a3e;
+  color: #1f7a3e;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoImage {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+}
+
+.metaLeft {
+  padding-top: 52px;
+}
+
+.metaRight {
+  text-align: right;
+}
+
+.invoiceHeading {
+  margin: 0 0 16px;
+  color: #2daa44;
+  font-size: 40px;
+  line-height: 0.9;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.metaText {
+  margin: 0 0 8px;
+  color: #8a8f95;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.metaText strong {
+  color: #1f2328;
+  font-weight: 600;
+}
+
+.descriptionHeading {
+  margin: 4px 0 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2328;
+}
+
+.lineDivider {
+  border-top: 1px solid #e5e7eb;
+  margin: 16px 0 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 10px;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 10px 0;
+  text-align: left;
+  border-bottom: none;
+}
+
+.table th {
+  color: #1f2328;
+  font-weight: 600;
+}
+
+.table td {
+  color: #8a8f95;
+}
+
+.amountCell {
+  text-align: right !important;
+}
+
+.totalsRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.totalsTable {
+  width: 42%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.totalsTable td {
+  border-top: 1px solid #e5e7eb;
+  border-bottom: none;
+  padding: 11px 0;
+}
+
+.totalsLabel {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.totalsValue {
+  text-align: right;
+  color: #7d8288;
+}
+
+.termsTitle {
+  margin: 16px 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.termsList {
+  margin: 0;
+  padding-left: 30px;
+  color: #22272d;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.termsList li {
+  margin-bottom: 8px;
+}
+
+.termsList li strong {
+  font-weight: 700;
+}
+
+@media (max-width: 1400px) {
+  .topRow {
+    grid-template-columns: 74px minmax(230px, 1fr) minmax(240px, 1fr);
+  }
+
+  .invoiceHeading {
+    font-size: 34px;
+  }
+}

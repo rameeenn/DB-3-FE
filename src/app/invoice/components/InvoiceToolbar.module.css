@@ -1,0 +1,193 @@
+.toolbar {
+  margin: 4px 0 14px;
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: transparent;
+}
+
+.controlCard,
+.metricCard {
+  position: relative;
+  border: 1px solid #e6eaef;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 140px !important;
+}
+
+.metricsLeft{
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+
+.metricsLeft .controlCard {
+  width: 160px;
+}
+
+.metricsLeft .controlCard, .metricsLeft .excelWrapper{
+  max-height: 58px;
+}
+
+.invoiceNoInput {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 11px;
+  color: #707782;
+  outline: none;
+  margin-top: 4px;
+}
+
+.invoiceNoInput::placeholder {
+  color: #a8aeb5;
+}
+
+.label {
+  margin: 0;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.value {
+  margin: 4px 0 0;
+  color: #707782;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sub {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: #8b929b;
+}
+
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.dateInput {
+  border: 1px solid #e6eaef;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #707782;
+  background: #fff;
+}
+
+.datePickerButton {
+  appearance: none;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.datePickerLabel {
+  color: #707782;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.datePickerIcon {
+  background: rgb(255, 255, 255);
+  width: 24px;
+  height: 24px;
+  border-radius: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+  top:55%;
+  transform: translateY(-50%);
+  box-shadow: -13.8px -13.8px 27.6px 0px #FFFFFF, 4.14px 4.14px 27.6px 0px #AAAACC80;
+
+}
+
+.calendarIcon {
+  color: var(--primary);
+  flex-shrink: 0;
+
+}
+
+.hiddenDateInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+
+.excelWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* padding: 10px; */
+  background: white;
+  border: 1px solid #e6eaef;
+  border-radius: 8px;
+  height: 58px;
+  width: 58px;
+}
+
+.excelBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dadada;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  align-self: center;
+}
+
+.excelBtn:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.excelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.metricCard {
+  min-width: 118px;
+}
