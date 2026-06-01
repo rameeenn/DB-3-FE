@@ -12,9 +12,9 @@ export default function InvoicePage() {
   return (
     <DashboardLayout pageTitle="Invoice" showBackButton={false}>
       <InvoiceTable
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        tabs={[]}
+        activeTab={""}
+        onTabChange={() => {}}
         onAddNew={() => {}}
         addButtonLabel="Add Invoice"
       />

@@ -11,9 +11,9 @@ export default function InvoicePage() {
   return (
     <DashboardLayout pageTitle="Setup" showBackButton={false}>
       <InvoiceTable
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
+        tabs={[]}
+        activeTab={""}
+        onTabChange={() => {}}
         onAddNew={handleAddNew}
         addButtonLabel={addButtonLabel}
         searchParams={searchParams}

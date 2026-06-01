@@ -34,6 +34,7 @@ const MENU_ICONS: Record<string, { active: string; inactive: string }> = {
   '/luggage': { active: 'Luggagegreen.png', inactive: 'Luggage.png' },
   '/club-members': { active: 'Clubgreen.svg', inactive: 'Club.svg' },
   '/dha-x-halcon': { active: 'active.png', inactive: 'inactive.png' },
+  '/invoice': { active: 'invoice-active.png', inactive: 'invoice-inactive.png' },
 };
 
 // Helper function to get icon based on active state

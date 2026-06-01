@@ -14,9 +14,9 @@ export default function DhaXHalconPage() {
   return (
     <DashboardLayout pageTitle="DHA x Halcon" showBackButton={false}>
       <DhaXHalconTable 
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        tabs={[]}
+        activeTab={""}
+        onTabChange={() => {}}
       />
     </DashboardLayout>
   );
