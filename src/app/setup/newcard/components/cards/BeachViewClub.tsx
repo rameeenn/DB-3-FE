@@ -68,9 +68,8 @@ export default function BeachViewClubCard({ data, side, cardRef, isDownload = fa
     return '/card-templates/defaultprofilepic.jpg';
   }
   
-  // Otherwise use the proxied image URL
-  const proxiedUrl = getProxiedImageUrl(data.profilePictureUrl);
-  return proxiedUrl || '/card-templates/defaultprofilepic.jpg';
+  // Use direct URL instead of proxy
+  return data.profilePictureUrl;
 };
 
   if (!templateLoaded) {
@@ -125,7 +124,7 @@ export default function BeachViewClubCard({ data, side, cardRef, isDownload = fa
         
         {/* Profile Image - centered or positioned as per design */}
         <img
-  src={getProxiedImageUrl(data.profilePictureUrl) || '/card-templates/defaultprofilepic.jpg'}
+  src={getProfileImageSrc()}
   alt="Member"
   crossOrigin="anonymous"
   onError={() => setProfileImageError(true)}
